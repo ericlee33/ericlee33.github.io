@@ -60,13 +60,16 @@
 .post-button {
   margin-top: 20px;
   text-align: left;
+    display: flex;
+    justify-content:center;
+    align-items: center;
 
   .btn {
     // color: $grey-dim;
     background: none;
     border: 0;
-    border-bottom: 2px solid var(--btn-default-border-color);
-    padding: 0;
+    border: 2px solid var(--btn-default-border-color);
+    padding: 0 20px;
     transition-property: border;
 
     &:hover {

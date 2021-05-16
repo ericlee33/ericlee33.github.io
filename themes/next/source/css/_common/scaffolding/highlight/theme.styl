@@ -117,6 +117,23 @@ if ($highlight-theme == 'night') {
     color: $highlight-comment,
     bg-color: $highlight-background
   };
+} else if ($highlight-theme == 'custom') {
+  $highlight-background   = #333842;
+  $highlight-current-line = #282a2e;
+  $highlight-selection    = #373b41;
+  $highlight-foreground   = #c5c8c6;
+  $highlight-comment      = #969896;
+  $highlight-red          = #E5C07B;
+  $highlight-orange       = #fff;
+  $highlight-yellow       = #f0c674;
+  $highlight-green        = #98C379;
+  $highlight-aqua         = #61AFEF;
+  $highlight-blue         = #81a2be;
+  $highlight-purple       = #C678DD;
+  $highlight-gutter       = {
+    color: lighten($highlight-background, 50%),
+    bg-color: darken($highlight-background, 50%)
+  };
 } else {
   $highlight-background   = #f7f7f7;
   $highlight-current-line = #efefef;
