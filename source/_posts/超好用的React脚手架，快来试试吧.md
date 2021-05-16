@@ -34,9 +34,8 @@ top: 100
 - 提供了可选配置项（由于`Vue`周边生态较为单一，官方提供的路由/状态管理方案只有一个，不像`React`生态光一个状态管理方案就有`MobX、Redux-Saga、Redux-Thunk`等等。。）
 - 令人舒适的`Inquirer`界面（不像`create-react-app`，通过执行脚手架时，传入不同`configuration`来创建不同需求的模板）
 - 提供保存配置的功能
-
-![image.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/07defb28770c437c9e7f4be3f73ef1e9~tplv-k3u1fbpfcp-zoom-1.image)
-![image.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/391857c9c41a42f7857405a48ae1cb02~tplv-k3u1fbpfcp-zoom-1.image)
+    <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/07defb28770c437c9e7f4be3f73ef1e9~tplv-k3u1fbpfcp-zoom-1.image" width="500" />
+    <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/391857c9c41a42f7857405a48ae1cb02~tplv-k3u1fbpfcp-zoom-1.image" width="500" />
 
 ### create-react-app的缺点
 

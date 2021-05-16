@@ -100,8 +100,8 @@ creative_commons:
 # Schemes
 # scheme: Muse
 scheme: Mist
-#scheme: Pisces
-#scheme: Gemini
+# scheme: Pisces
+# scheme: Gemini
 
 # Dark Mode
 darkmode: false
@@ -234,10 +234,13 @@ chat:
 # Post Settings
 # See: https://theme-next.org/docs/theme-settings/posts
 # ---------------------------------------------------------------
+excerpt_description: false
 
-save_scroll: true;
-# Automatically excerpt description in homepage as preamble text.
-excerpt_description: true
+excerpt:
+  depth: 1
+  excerpt_excludes: []
+  more_excludes: []
+  hideWholePostExcerpts: true
 
 # Read more button
 # If true, the read more button will be displayed in excerpt section.
@@ -280,9 +283,9 @@ reward:
 # Usage: `Key: permalink || icon` (Font Awesome)
 follow_me:
   #Twitter: https://twitter.com/username || twitter
-  github: https://github.com/ericlee33 || github
+  # github: https://github.com/ericlee33 || github
   #Telegram: https://t.me/channel_name || telegram
-  #WeChat: /images/wechat_channel.jpg || wechat
+  WeChat: /images/wechat_channel.jpeg || wechat
   #RSS: /atom.xml || rss
 
 # Related popular posts
@@ -296,7 +299,8 @@ related_posts:
     #PPMixingRate: 0.0
     #isDate: false
     #isImage: false
-    #isExcerpt: false
+    # isExcerpt: false
+
 
 # Post edit
 # Dependencies: https://github.com/hexojs/hexo-deployer-git
@@ -360,21 +364,21 @@ codeblock:
   # Code Highlight theme
   # Available values: normal | night | night eighties | night blue | night bright | solarized | solarized dark | galactic
   # See: https://github.com/chriskempson/tomorrow-theme
-  highlight_theme: night eighties
+  highlight_theme: custom
   # Add copy button on codeblock
   copy_button:
-    enable: false
+    enable: true
     # Show text copy result.
-    show_result: false
+    show_result: true
     # Available values: default | flat | mac
     style:
 
 back2top:
   enable: true
   # Back to top in sidebar.
-  sidebar: false
+  sidebar: true
   # Scroll percent label in b2t button.
-  scrollpercent: false
+  scrollpercent: true
 
 # Reading progress bar
 reading_progress:
@@ -414,7 +418,7 @@ github_banner:
 # ---------------------------------------------------------------
 
 font:
-  enable: false
+  enable: true
 
   # Uri of fonts host, e.g. https://fonts.googleapis.com (Default).
   host:
@@ -427,20 +431,20 @@ font:
   # Global font settings used for all elements inside <body>.
   global:
     external: true
-    family: Lato
-    size:
+    family: Times New Roman
+    size: 0.5
 
   # Font settings for site title (.site-title).
   title:
     external: true
-    family:
-    size:
+    family: Times New Roman
+    size: 4
 
   # Font settings for headlines (<h1> to <h6>).
   headings:
     external: true
     family:
-    size:
+    size: 3
 
   # Font settings for posts (.post-body).
   posts:
@@ -484,7 +488,7 @@ yandex_site_verification:
 baidu_site_verification:
 
 # Enable baidu push so that the blog will push the url to baidu automatically which is very helpful for SEO.
-baidu_push: false
+baidu_push: true
 
 
 # ---------------------------------------------------------------

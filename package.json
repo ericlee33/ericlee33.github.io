@@ -6,7 +6,7 @@
     "build": "hexo generate",
     "clean": "hexo clean",
     "deploy": "sh ./deploy.sh",
-    "server": "hexo server"
+    "dev": "hexo server"
   },
   "hexo": {
     "version": "5.2.0"
@@ -15,6 +15,7 @@
     "gulp": "^4.0.2",
     "hexo": "^5.0.0",
     "hexo-deployer-git": "^2.1.0",
+    "hexo-excerpt": "^1.1.6",
     "hexo-generator-archive": "^1.0.0",
     "hexo-generator-baidu-sitemap": "^0.1.9",
     "hexo-generator-category": "^1.0.0",

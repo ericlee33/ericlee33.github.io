@@ -9,3 +9,9 @@
 
 - deploy 
   `npm run deploy`
+
+
+
+http://theme-next.iissnan.com/getting-started.html
+<!--more-->
+
