@@ -1,0 +1,597 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>Formily如何实现自定义组件</title>
+    <url>/2021/05/28/Formily%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E8%87%AA%E5%AE%9A%E4%B9%89%E7%BB%84%E4%BB%B6/</url>
+    <content><![CDATA[<blockquote>
+<p>注：本文使用的Formily为v1版本，21年4月中旬阿里团队已经推出v2版本 <a href="https://v2.formilyjs.org/">https://v2.formilyjs.org/</a> ，但是跨度非常大，为<code>Breaking change</code>，相当于框架底层完全重构，对于v1版本的项目来说迁移成本非常大。</p>
+</blockquote>
+<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><h3 id="Formily是什么？"><a href="#Formily是什么？" class="headerlink" title="Formily是什么？"></a>Formily是什么？</h3><p><a href="https://formilyjs.org/#/bdCRC5/dzUZU8il">https://formilyjs.org/#/bdCRC5/dzUZU8il</a><br>这里引用官网的描述：<br><strong>Formily 是一个由阿里巴巴集团多部共建的面向中后台复杂场景的表单解决方案，它也是一个表单框架。</strong></p>
+<h3 id="Formily实现了什么？"><a href="#Formily实现了什么？" class="headerlink" title="Formily实现了什么？"></a>Formily实现了什么？</h3><ul>
+<li>在复杂联动场景下更加清晰简单的描述联动的方式</li>
+<li>在超多表单项场景下可以获得更好的表单操作性能</li>
+<li>在跨终端场景下实现通用表单解决方案</li>
+</ul>
+<h3 id="Formily组件说明"><a href="#Formily组件说明" class="headerlink" title="Formily组件说明"></a>Formily组件说明</h3><p><code>Formily v1</code>提供给了我们3种<code>React</code>的<code>UI</code>框架</p>
+<p>以下这些<code>UI</code>框架经过<code>formily</code>的二次封装，UI组件经过封装后，完美兼容了<code>Formily</code></p>
+<p>3种<code>UI</code>框架分别为：</p>
+<ul>
+<li><code>Antd</code></li>
+<li><code>Next</code></li>
+<li><code>Meet</code></li>
+</ul>
+<p><a href="https://formilyjs.org/#/zoi8i0/6dt3t7FjI4">😊 Antd的Formily API文档</a></p>
+<p>官方文档中并没有介绍基于<code>JSON Schema</code>使用自定义组件的方法，但是给出了<br>1.基于<code>JSX</code>表单的自定义组件制作方法， <a href="https://formilyjs.org/#/0yTeT0/vVSBSNhmHr">理解表单扩展机制</a>（虽然文档依旧欠缺，不过库的<code>TypeScript</code>的类型做的还算很不错的，相当于一份文档吧）<br>2.<a href="https://formilyjs.org/#/0yTeT0/A1T4TPhXUZ">实现超复杂自定义组件</a>，但是该文档并不是很实用，由于我们是<code>JSON Schema</code>开发模式，用<code>useFromEffects</code>来控制<code>state</code>显然不现实</p>
+<h2 id="制作自定义组件"><a href="#制作自定义组件" class="headerlink" title="制作自定义组件"></a>制作自定义组件</h2><blockquote>
+<p>这里以基于<code>Antd</code>二次封装<code>Radio</code>业务组件举例</p>
+</blockquote>
+<h3 id="在容器中引入自定义组件"><a href="#在容器中引入自定义组件" class="headerlink" title="在容器中引入自定义组件"></a>在容器中引入自定义组件</h3><p>首先，为了使用<code>JSON Schema</code>模式，我们使用<code>SchemaForm</code>组件。</p>
+<figure class="highlight jsx"><table><tr><td class="code"><pre><span class="line">&lt;SchemaForm</span><br><span class="line">    components=&#123;components&#125;</span><br><span class="line">    onSubmit=&#123;onSubmit&#125;</span><br><span class="line">    expressionScope=&#123;createRichTextUtils(history)&#125;</span><br><span class="line">    schema=&#123;formData.schema&#125;</span><br><span class="line">    onChange=&#123;onCheckCanClickNextStep&#125;</span><br><span class="line">    actions=&#123;actions&#125;</span><br><span class="line">    onValidateFailed=&#123;onValidateFailed&#125;</span><br><span class="line">&gt;</span><br><span class="line">&lt;/SchemaForm&gt;</span><br></pre></td></tr></table></figure>
+<p>可以注意到，<code>props</code>有一个属性为<code>components</code>，该属性代表了全部<code>JSON Schema</code>通过<code>x-component</code>可以使用的组件们。</p>
+<p><code>components</code>对象如下：</p>
+<figure class="highlight jsx"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> CustomRadio <span class="keyword">from</span> <span class="string">&#x27;../../custom-components/CustomRadio/CustomRadio&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> <span class="string">&#x27;xxx&#x27;</span> <span class="keyword">from</span> <span class="string">&#x27;xxx&#x27;</span><span class="comment">// 此处省略其他import.....</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> components = &#123;</span><br><span class="line">    <span class="comment">/** 自定义组件们 */</span></span><br><span class="line">    CustomRadio,</span><br><span class="line">    <span class="comment">// others....</span></span><br><span class="line">    <span class="comment">/** 官方组件们 */</span></span><br><span class="line">    Input,</span><br><span class="line">    <span class="attr">Radio</span>: Radio.Group,</span><br><span class="line">    <span class="attr">Checkbox</span>: Checkbox.Group,</span><br><span class="line">    <span class="attr">TextArea</span>: Input.TextArea,</span><br><span class="line">    NumberPicker,</span><br><span class="line">    Select,</span><br><span class="line">    Switch,</span><br><span class="line">    DatePicker,</span><br><span class="line">    <span class="attr">DateRangePicker</span>: DatePicker.RangePicker,</span><br><span class="line">    <span class="attr">YearPicker</span>: DatePicker.YearPicker,</span><br><span class="line">    <span class="attr">MonthPicker</span>: DatePicker.MonthPicker,</span><br><span class="line">    <span class="attr">WeekPicker</span>: DatePicker.WeekPicker,</span><br><span class="line">    TimePicker,</span><br><span class="line">    <span class="attr">TimeRangePicker</span>: TimePicker.RangePicker,</span><br><span class="line">    Upload,</span><br><span class="line">    Range,</span><br><span class="line">    Rating,</span><br><span class="line">    Transfer,</span><br><span class="line">    <span class="comment">// others....</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>我们在对象中添加一个<code>CustomRadio</code>，至此成功引入了一个我们要自定义的组件</p>
+<h3 id="Formily-JSON-Schema协议规范"><a href="#Formily-JSON-Schema协议规范" class="headerlink" title="Formily JSON Schema协议规范"></a>Formily JSON Schema协议规范</h3><p>在真正开始写组件逻辑之前，你需要了解<code>JSON Schema</code>的<code>Schema</code>规范，这一部分</p>
+<p>实际上比如<code>Antd</code>的<code>Form</code>组件，大体构成为</p>
+<figure class="highlight jsx"><table><tr><td class="code"><pre><span class="line">&lt;Form&gt;</span><br><span class="line">    <span class="xml"><span class="tag">&lt;<span class="name">Form.Item</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">        <span class="attr">className</span>=<span class="string">&quot;form-item&quot;</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">        <span class="attr">label</span>=<span class="string">&quot;test_radio&quot;</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">        <span class="attr">name</span>=<span class="string">&quot;test_radio&quot;</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">        <span class="attr">rules</span>=<span class="string">&#123;[&#123;</span> <span class="attr">required:</span> <span class="attr">true</span> &#125;]&#125;</span></span></span><br><span class="line"><span class="tag"><span class="xml">    &gt;</span></span></span><br><span class="line"><span class="xml">        <span class="tag">&lt;<span class="name">CustomRadio</span> <span class="attr">terminalValue</span>=<span class="string">&#123;[</span> <span class="attr">1</span> ]&#125; /&gt;</span></span></span><br><span class="line"><span class="xml">    <span class="tag">&lt;/<span class="name">Form.Item</span>&gt;</span></span></span><br><span class="line">&lt;/Form&gt;</span><br></pre></td></tr></table></figure>
+
+<p>那么如何用<code>JSON</code>去描述这一行为呢？<code>Formily</code>约定的<code>Schema</code>如下：</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;type&quot;</span>: <span class="string">&quot;object&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;properties&quot;</span>: &#123;</span><br><span class="line">    <span class="attr">&quot;test_radio&quot;</span>: &#123;</span><br><span class="line">            <span class="attr">&quot;key&quot;</span>: <span class="string">&quot;test_radio&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;type&quot;</span>: <span class="string">&quot;number&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;title&quot;</span>: <span class="string">&quot;测试customRadio&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;name&quot;</span>: <span class="string">&quot;test_radio&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;required&quot;</span>: <span class="literal">true</span>,</span><br><span class="line">            <span class="attr">&quot;enum&quot;</span>: [</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="attr">&quot;label&quot;</span>: <span class="string">&quot;yes&quot;</span>,</span><br><span class="line">                    <span class="attr">&quot;value&quot;</span>: <span class="number">1</span></span><br><span class="line">                &#125;,</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="attr">&quot;label&quot;</span>: <span class="string">&quot;no&quot;</span>,</span><br><span class="line">                    <span class="attr">&quot;value&quot;</span>: <span class="number">0</span></span><br><span class="line">                &#125;</span><br><span class="line">            ],</span><br><span class="line">            <span class="attr">&quot;x-props&quot;</span>: &#123;</span><br><span class="line">                <span class="attr">&quot;itemClassName&quot;</span>: <span class="string">&quot;form-item&quot;</span></span><br><span class="line">            &#125;,</span><br><span class="line">            <span class="attr">&quot;x-component&quot;</span>: <span class="string">&quot;CustomRadio&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;x-component-props&quot;</span>: &#123;</span><br><span class="line">                <span class="attr">&quot;terminalValue&quot;</span>: [</span><br><span class="line">                    <span class="number">1</span></span><br><span class="line">                ]</span><br><span class="line">            &#125;,</span><br><span class="line">            <span class="attr">&quot;default&quot;</span>: <span class="number">1</span></span><br><span class="line">        &#125;,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>简单解释一下：<br><code>x-props</code>表示<code>&lt;Form.item /&gt;</code>的<code>props</code><br><code>x-component-props</code>表示表单<code>UI</code>组件的<code>props</code></p>
+<h3 id="制作表单组件"><a href="#制作表单组件" class="headerlink" title="制作表单组件"></a>制作表单组件</h3><blockquote>
+<p>为了方便，我们直接在<code>Antd</code>的<code>Radio</code>组件基础上封装我们的业务Radio组件</p>
+</blockquote>
+<figure class="highlight jsx"><table><tr><td class="code"><pre><span class="line"><span class="comment">// CustomRadio.jsx</span></span><br><span class="line"><span class="keyword">import</span> styles <span class="keyword">from</span> <span class="string">&#x27;./CustomRadio.module.scss&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; Radio &#125; <span class="keyword">from</span> <span class="string">&#x27;antd&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; useEffect, useState &#125; <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> (&#123; onChange, terminalValue = [], dataSource = [], value, ...rest &#125;) =&gt; &#123;</span><br><span class="line">    <span class="keyword">const</span> [radioValue, setRadioValue] = useState(value);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> onChangeRadioGroup = <span class="function"><span class="params">event</span> =&gt;</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> value = event.target?.value;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/** 触发业务逻辑，可以做一些事情，比如弹窗，等等操作 */</span></span><br><span class="line">        <span class="keyword">if</span> (terminalValue.includes(value)) &#123;</span><br><span class="line">            <span class="comment">// Do things</span></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        setRadioValue(value);</span><br><span class="line">        <span class="comment">/** 改变SchemaForm内部value */</span></span><br><span class="line">        onChange(value);</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> (</span><br><span class="line">        <span class="xml"><span class="tag">&lt;<span class="name">div</span> <span class="attr">className</span>=<span class="string">&#123;styles.container&#125;</span>&gt;</span></span></span><br><span class="line"><span class="xml">            <span class="tag">&lt;<span class="name">Radio.Group</span> <span class="attr">onChange</span>=<span class="string">&#123;onChangeRadioGroup&#125;</span> <span class="attr">value</span>=<span class="string">&#123;radioValue&#125;</span>&gt;</span></span></span><br><span class="line"><span class="xml">                &#123;dataSource.map((radio, index) =&gt; (</span></span><br><span class="line"><span class="xml">                    <span class="tag">&lt;<span class="name">Radio</span> <span class="attr">key</span>=<span class="string">&#123;index&#125;</span> <span class="attr">value</span>=<span class="string">&#123;radio.value&#125;</span>&gt;</span></span></span><br><span class="line"><span class="xml">                        &#123;radio.label&#125;</span></span><br><span class="line"><span class="xml">                    <span class="tag">&lt;/<span class="name">Radio</span>&gt;</span></span></span><br><span class="line"><span class="xml">                ))&#125;</span></span><br><span class="line"><span class="xml">            <span class="tag">&lt;/<span class="name">Radio.Group</span>&gt;</span></span></span><br><span class="line"><span class="xml">        <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line">    );</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h4 id="Formily为组件注入的Props项"><a href="#Formily为组件注入的Props项" class="headerlink" title="Formily为组件注入的Props项"></a>Formily为组件注入的Props项</h4><p>在<code>Formily</code>框架中，在调用组件时，会自动注入几个属性</p>
+<ul>
+<li><code>onChange</code></li>
+<li><code>onBlur</code></li>
+<li><code>onFocus</code></li>
+<li><code>value</code></li>
+<li><code>dataSource</code></li>
+<li>我们在<code>x-component-props</code>层定制的属性<br>还有其它的默认属性们</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>onChange</td>
+<td>调用该方法才可以真正对<code>Form</code>实例对象上的对应<code>name</code>表单项的<code>value</code>进行修改</td>
+</tr>
+<tr>
+<td>value</td>
+<td>对应着JSON中的<code>default</code>字段改</td>
+</tr>
+<tr>
+<td>dataSource</td>
+<td>比如在Radio中，就是通过JSON描述的Enum值</td>
+</tr>
+<tr>
+<td>自定义属性</td>
+<td>-</td>
+</tr>
+</tbody></table>
+<h4 id="注入业务逻辑"><a href="#注入业务逻辑" class="headerlink" title="注入业务逻辑"></a>注入业务逻辑</h4><p>我们主动去监听<code>Radio.Group</code>的<code>onChange</code>事件，当其<code>value</code>值满足我们的业务逻辑时，我们触发相关业务逻辑。</p>
+<h2 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h2><p>至此，我们完成了一个最基础的业务组件。如果还有什么疑问的话，可以参考 <a href="https://formilyjs.org/#/0yTeT0/vVSBSNhmHr">理解表单扩展机制</a> 。</p>
+<p>吐槽：简单看了一下v2的介绍，Formily官方文档中描述的意思是，官方也意识到了v1版本组件扩展的问题，所以在v2版本完全重构了。</p>
+]]></content>
+  </entry>
+  <entry>
+    <title>Formily服务端控制自定义校验x-rules规则实践</title>
+    <url>/2021/03/29/Formily%E6%9C%8D%E5%8A%A1%E7%AB%AF%E6%8E%A7%E5%88%B6%E8%87%AA%E5%AE%9A%E4%B9%89%E6%A0%A1%E9%AA%8Cx-rules%E8%A7%84%E5%88%99%E5%AE%9E%E8%B7%B5/</url>
+    <content><![CDATA[<h2 id="提供给服务端自定义校验函数"><a href="#提供给服务端自定义校验函数" class="headerlink" title="提供给服务端自定义校验函数"></a>提供给服务端自定义校验函数</h2><p>由于后端要求动态提供校验规则，并且每一个表单字段都需要很多种校验方式，这里进行探索。</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">// /public/index.html</span></span><br><span class="line">&lt;script src=<span class="string">&quot;https://服务器地址/xRulesMethods.js&quot;</span>&gt;&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+
+
+<p>这里提供给后端模板，文件格式如下：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">(<span class="function"><span class="keyword">function</span> (<span class="params"><span class="built_in">window</span></span>) </span>&#123;</span><br><span class="line">    <span class="built_in">window</span>.rulesMethods = &#123;</span><br><span class="line">        <span class="attr">customRule2</span>: <span class="function">(<span class="params">value</span>) =&gt;</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> value === <span class="string">&#x27;123&#x27;</span> ? <span class="string">&#x27;不能等于123&#x27;</span> : value === <span class="string">&#x27;234&#x27;</span> ? <span class="string">&#x27;不能等于234&#x27;</span> : <span class="string">&#x27;&#x27;</span></span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="attr">customRule3</span>: <span class="function">(<span class="params">value</span>) =&gt;</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> value === <span class="string">&#x27;14&#x27;</span> ? <span class="string">&#x27;不能等于14&#x27;</span> : <span class="string">&#x27;&#x27;</span></span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="attr">customRule4</span>: <span class="function">(<span class="params">value</span>) =&gt;</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> value === <span class="string">&#x27;1&#x27;</span> ? <span class="string">&#x27;不能等于1&#x27;</span> : <span class="string">&#x27;&#x27;</span></span><br><span class="line">        &#125;,</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;)(<span class="built_in">window</span>);</span><br></pre></td></tr></table></figure>
+
+
+<p>我们在index.js引入该自定义校验规则即可</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123;</span><br><span class="line">    registerValidationRules,</span><br><span class="line">&#125; <span class="keyword">from</span> <span class="string">&#x27;@formily/antd&#x27;</span>; </span><br><span class="line">registerValidationRules(<span class="built_in">window</span>.rulesMethods)</span><br></pre></td></tr></table></figure>
+
+
+<p>这样服务端就可以进行完整的自定义校验操纵了</p>
+<p>JSON schema使用自定义函数方式如下：</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;name&quot;</span>: &#123;</span><br><span class="line">        <span class="attr">&quot;key&quot;</span>: <span class="string">&quot;name&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;type&quot;</span>: <span class="string">&quot;string&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;title&quot;</span>: <span class="string">&quot;姓名&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;name&quot;</span>: <span class="string">&quot;name&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;required&quot;</span>: <span class="literal">true</span>,</span><br><span class="line">        <span class="attr">&quot;x-props&quot;</span>: &#123;</span><br><span class="line">            <span class="attr">&quot;itemClassName&quot;</span>: <span class="string">&quot;form-item&quot;</span></span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="attr">&quot;x-component-props&quot;</span>: &#123;</span><br><span class="line">            <span class="attr">&quot;bordered&quot;</span>: <span class="literal">false</span></span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="attr">&quot;x-rules&quot;</span>: &#123;</span><br><span class="line">            <span class="attr">&quot;customRule2&quot;</span>: <span class="literal">true</span></span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="attr">&quot;x-component&quot;</span>: <span class="string">&quot;input&quot;</span></span><br><span class="line">    &#125;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="如何进行联动校验？"><a href="#如何进行联动校验？" class="headerlink" title="如何进行联动校验？"></a>如何进行联动校验？</h2><p><a href="https://github.com/alibaba/formily/issues/478">https://github.com/alibaba/formily/issues/478</a><br>看到官方之前提供的RFC中，其中有一个讨论举的例子很不错，但是看起来最终并没有实现。</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;name&quot;</span>: &#123;</span><br><span class="line">        <span class="attr">&quot;type&quot;</span>: <span class="string">&quot;string&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;title&quot;</span>: <span class="string">&quot;姓名&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;default&quot;</span>: <span class="string">&quot;xxx&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;x-component&quot;</span>: <span class="string">&quot;Input&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;x-component-props&quot;</span>: &#123;</span><br><span class="line">            <span class="attr">&quot;value&quot;</span>: <span class="string">&quot;&#123;&#123;root.value.fieldA === &#x27;xxx&#x27; ? 0 : 1&#125;&#125;&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;disabled&quot;</span>: <span class="string">&quot;&#123;&#123;root.value.fieldA &gt; root.value.fieldB&#125;&#125;&quot;</span>, <span class="comment">//支持嵌套字段值获取，支持JS原生方法、逻辑表达式</span></span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="attr">&quot;x-rules&quot;</span>: [&#123;</span><br><span class="line">            <span class="attr">&quot;required&quot;</span>: <span class="literal">true</span></span><br><span class="line">        &#125;]</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>鉴于上面👆这种方式并没有最终被采纳，我们只能通过前端控制effect的方式进行，下面是官网提供的例子：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> useLinkageValidateEffects = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> &#123; setFieldState, getFieldState &#125; = createFormActions();</span><br><span class="line">    onFieldValueChange$(<span class="string">&#x27;*(name,family_name)&#x27;</span>).subscribe(<span class="function"><span class="params">fieldState</span> =&gt;</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> selfName = fieldState.name;</span><br><span class="line">        <span class="keyword">const</span> selfValue = fieldState.value;</span><br><span class="line">        <span class="keyword">const</span> otherName = selfName == <span class="string">&#x27;name&#x27;</span> ? <span class="string">&#x27;family_name&#x27;</span> : <span class="string">&#x27;name&#x27;</span>;</span><br><span class="line">        <span class="keyword">const</span> otherValue = getFieldState(otherName, <span class="function"><span class="params">state</span> =&gt;</span> state.value);</span><br><span class="line">        setFieldState(otherName, <span class="function"><span class="params">state</span> =&gt;</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (selfValue &amp;&amp; otherValue &amp;&amp; selfValue !== otherValue) &#123;</span><br><span class="line">                state.errors = <span class="string">&#x27;两次密码输入不一致&#x27;</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                state.errors = <span class="string">&#x27;&#x27;</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        setFieldState(selfName, <span class="function"><span class="params">state</span> =&gt;</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (selfValue &amp;&amp; otherValue &amp;&amp; selfValue !== otherValue) &#123;</span><br><span class="line">                state.errors = <span class="string">&#x27;两次密码输入不一致&#x27;</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                state.errors = <span class="string">&#x27;&#x27;</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+<p>通过这种方式我们就可以进行不同表单字段的联动校验了</p>
+]]></content>
+      <tags>
+        <tag>Formily</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>H5实现自定义身份证拍照</title>
+    <url>/2021/04/11/h5%E8%87%AA%E5%AE%9A%E4%B9%89%E8%BA%AB%E4%BB%BD%E8%AF%81%E6%8B%8D%E7%85%A7/</url>
+    <content><![CDATA[<blockquote>
+<p>demo源码：<a href="https://github.com/ericlee33/h5-id-card">https://github.com/ericlee33/h5-id-card</a> ，如果觉得有帮助的话，欢迎点个star👏</p>
+</blockquote>
+<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>由于h5通过 <code>&lt;input type=&quot;file /&gt;</code> 方式吊起拍照的为系统相机，给用户的体验并不是很好，没有裁切框，也无法在系统相机上附加 <code>tips</code> 蒙层进行扩展，比如在蒙层上告知用户拍照的注意事项。所以业务上需要实现一个自定义拍照身份证的页面。</p>
+<h2 id="前期准备工作"><a href="#前期准备工作" class="headerlink" title="前期准备工作"></a>前期准备工作</h2><h3 id="各端兼容性现状"><a href="#各端兼容性现状" class="headerlink" title="各端兼容性现状"></a>各端兼容性现状</h3><p><strong>结论：</strong><br><strong>安卓：chrome53版本之后支持该api。</strong><br><strong>ios：仅safari11+支持。ios微信内置浏览器、Chrome、Edge等其它浏览器均不支持。</strong></p>
+<h3 id="考虑替代方案"><a href="#考虑替代方案" class="headerlink" title="考虑替代方案"></a>考虑替代方案</h3><p><strong>以下情况，均需要考虑替代方案：</strong><br><strong><strong>第一类：当满足下列条件，均需要采用系统相机拍照方案</strong></strong><br>1.用户不提供摄像头权限。<br>2.命中以下其中任意一条错误</p>
+<ul>
+<li><code>AbortError</code>［中止错误］</li>
+<li><code>NotAllowedError</code>［拒绝错误］</li>
+<li><code>NotFoundError</code>［找不到错误］</li>
+<li><code>NotReadableError</code>［无法读取错误］</li>
+<li><code>OverConstrainedError</code>［无法满足要求错误］</li>
+<li><code>SecurityError</code>［安全错误］</li>
+<li><code>TypeError</code>［类型错误］</li>
+</ul>
+<p>3.用户浏览器不支持该api</p>
+<p><strong>第二类：当ios用户使用非safari浏览器访问h5页面时</strong><br>由于ios只有safari11+可以吊起后置摄像头视频流，如果ios用户在非safari浏览器打开h5登陆页，都要直接引导用户复制链接到safari浏览器打开，避免接下来无法进行自定义拍照。这里牛客做的就比较好，可以仿照牛客做一个引导按钮。</p>
+<p align="center">
+    <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/708978852bda482590512e26b3c761ad~tplv-k3u1fbpfcp-zoom-1.image" width="40%">
+</p>
+
+<h2 id="正片开始"><a href="#正片开始" class="headerlink" title="正片开始"></a>正片开始</h2><blockquote>
+<p><strong>本文不涉及替代方案的兼容逻辑，可以自行在 <code>Promise.reject()</code> 时进行对应处理。</strong></p>
+</blockquote>
+<p>我们的主角是 <code>MediaDevices.getUserMedia()</code> ， <code>MDN</code> 对该api的介绍如下</p>
+<blockquote>
+<p><code>MediaDevices.getUserMedia()</code> 会提示用户给予使用媒体输入的许可，媒体输入会产生一个<a href="https://developer.mozilla.org/zh-CN/docs/Web/API/MediaStream"><code>MediaStream</code></a>，里面包含了请求的媒体类型的轨道。此流可以包含一个视频轨道（来自硬件或者虚拟视频源，比如相机、视频采集设备和屏幕共享服务等等）、一个音频轨道（同样来自硬件或虚拟音频源，比如麦克风、A/D转换器等等），也可能是其它轨道类型。</p>
+</blockquote>
+<h3 id="能力检测"><a href="#能力检测" class="headerlink" title="能力检测"></a>能力检测</h3><hr>
+<p>由于不同浏览器对于标准的实现不一致，需要作api能力的兼容，避免用户浏览器无法正常调用该api。</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">//访问用户媒体设备的兼容方法</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">getUserMedia</span>(<span class="params">constrains</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (navigator.mediaDevices?.getUserMedia) &#123;</span><br><span class="line">        <span class="comment">//最新标准API</span></span><br><span class="line">        <span class="keyword">return</span> navigator.mediaDevices.getUserMedia(constrains);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (navigator.webkitGetUserMedia) &#123;</span><br><span class="line">        <span class="comment">//webkit内核浏览器</span></span><br><span class="line">        <span class="keyword">return</span> navigator.webkitGetUserMedia(constrains);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (navigator.mozGetUserMedia) &#123;</span><br><span class="line">        <span class="comment">//Firefox浏览器</span></span><br><span class="line">        <span class="keyword">return</span> navigator.mozGetUserMedia(constrains);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (navigator.getUserMedia) &#123;</span><br><span class="line">        <span class="comment">//旧版API</span></span><br><span class="line">        <span class="keyword">return</span> navigator.getUserMedia(constrains);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="在页面上放置一个video元素"><a href="#在页面上放置一个video元素" class="headerlink" title="在页面上放置一个video元素"></a>在页面上放置一个video元素</h3><hr>
+<figure class="highlight jsx"><table><tr><td class="code"><pre><span class="line">&lt;video</span><br><span class="line">   id=<span class="string">&quot;video&quot;</span></span><br><span class="line">   autoPlay</span><br><span class="line">   muted</span><br><span class="line">   playsInline</span><br><span class="line">   style=&#123;&#123;</span><br><span class="line">    <span class="attr">width</span>: <span class="string">&#x27;100%&#x27;</span>,</span><br><span class="line">  &#125;&#125;</span><br><span class="line">&gt;&lt;/video&gt;</span><br></pre></td></tr></table></figure>
+<p>有几个注意点⚠️</p>
+<blockquote>
+<p>iOS 10 Safari 允许自动播放以下两种视频：</p>
+<ul>
+<li>无音轨视频；</li>
+<li>无声音视频（设置了 <code>muted</code> 属性）；</li>
+</ul>
+</blockquote>
+<p>对于这两种类型的视频，可以通过 <code>&lt;video autoplay&gt;</code> 或 <code>video.play()</code> 两种方式来自动播放，无需用户主动操作。但是，如果它们在播放时变得有声音（获取了音轨，或者 <code>muted</code> 属性被取消），Safari 会暂停播放。</p>
+<ul>
+<li>只有提供 <code>muted</code> 属性，让视频静音，才可以通过 <code>&lt;video autoplay&gt;</code> 或 <code>video.play()</code> 两种方式来进行播放</li>
+<li>必须提供 <code>playsInline</code> 属性，不然在ios上会只播放一帧</li>
+</ul>
+<h3 id="调用封装好的getUserMedia，获取用户媒体流"><a href="#调用封装好的getUserMedia，获取用户媒体流" class="headerlink" title="调用封装好的getUserMedia，获取用户媒体流"></a>调用封装好的<strong>getUserMedia，获取用户媒体流</strong></h3><hr>
+<p>调用时，我们可以给<code>constrains</code> 对象可以多种不同的值，来获取用户设备底层各种不同的媒体流。</p>
+<ul>
+<li><code>video: true</code> <strong>（默认调取前置摄像头）</strong></li>
+<li>为了调取后置摄像头，需要通过 <code>facingMode: &#123; exact: &#39;environment&#39; &#125;</code> 来进行调用**（如果后置摄像头不存在，则会导致获取媒体流失败</li>
+<li>为了获取特定分辨率的视频流，我们可以指定相应的 <code>width</code> <code>height</code><strong>（但这种方式有缺陷，一旦用户设备不存在对于像素流，则会导致获取媒体流失败，所以，我们不对像素进行定制，使用自动获取到的媒体流像素）</strong><figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 该函数需要接受一个video的dom节点作为参数</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">getUserMediaStream</span>(<span class="params">videoNode</span>) </span>&#123;</span><br><span class="line">  	<span class="comment">/** </span></span><br><span class="line"><span class="comment">     * 调用api成功的回调函数</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">success</span>(<span class="params">stream, video</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function">(<span class="params">resolve, reject</span>) =&gt;</span> &#123;</span><br><span class="line">            video.srcObject = stream;</span><br><span class="line"></span><br><span class="line">            video.onloadedmetadata = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">                video.play();</span><br><span class="line">                resolve();</span><br><span class="line">            &#125;;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">  </span><br><span class="line">    <span class="comment">//调用用户媒体设备，访问摄像头</span></span><br><span class="line">    <span class="keyword">return</span> getUserMedia(&#123;</span><br><span class="line">        <span class="attr">audio</span>: <span class="literal">false</span>,</span><br><span class="line">        <span class="attr">video</span>: &#123; <span class="attr">facingMode</span>: &#123; <span class="attr">exact</span>: <span class="string">&#x27;environment&#x27;</span> &#125; &#125;,</span><br><span class="line">        <span class="comment">// video: true,</span></span><br><span class="line">        <span class="comment">// video: &#123; facingMode: &#123; exact: &#x27;environment&#x27;, width: 1280, height: 720 &#125; &#125;,</span></span><br><span class="line">    &#125;)</span><br><span class="line">        .then(<span class="function"><span class="params">res</span> =&gt;</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> success(res, videoNode);</span><br><span class="line">        &#125;)</span><br><span class="line">        .catch(<span class="function"><span class="params">error</span> =&gt;</span> &#123;</span><br><span class="line">            <span class="built_in">console</span>.log(<span class="string">&#x27;访问用户媒体设备失败：&#x27;</span>, error.name, error.message);</span><br><span class="line">            <span class="keyword">return</span> <span class="built_in">Promise</span>.reject();</span><br><span class="line">        &#125;);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></li>
+</ul>
+<p><strong>当前效果：</strong></p>
+<p align="center">
+    <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0d4f04c1b98a4d0594fa9ceace06ec7a~tplv-k3u1fbpfcp-zoom-1.image" width="40%" />
+</p>
+
+<h3 id="增加裁切框和外部阴影"><a href="#增加裁切框和外部阴影" class="headerlink" title="增加裁切框和外部阴影"></a>增加裁切框和外部阴影</h3><hr>
+<ul>
+<li>裁切框我们根据需求写到页面中，之后会通过  <code>getBoundingClientRect</code> 获取裁切框的位置进行裁切。</li>
+<li>外部阴影使用 <code>box-shadow</code> 即可<figure class="highlight jsx"><table><tr><td class="code"><pre><span class="line">&lt;div className=&#123;styles[<span class="string">&#x27;shadow-layer&#x27;</span>]&#125; style=&#123;&#123; <span class="attr">height</span>: <span class="string">`<span class="subst">$&#123;videoHeight&#125;</span>px`</span> &#125;&#125;&gt;</span><br><span class="line">  <span class="xml"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;capture-rectangle&quot;</span> <span class="attr">className</span>=<span class="string">&#123;styles[</span>&#x27;<span class="attr">capture-rectangle</span>&#x27;]&#125;&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line">&lt;/div&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight css"><table><tr><td class="code"><pre><span class="line"><span class="keyword">@function</span> remB($px) &#123;</span><br><span class="line">    <span class="keyword">@return</span> ($px/<span class="number">75</span>) * <span class="number">1rem</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.shadow-layer</span> &#123;</span><br><span class="line">  <span class="attribute">position</span>: absolute;</span><br><span class="line">  <span class="attribute">top</span>: <span class="number">0</span>;</span><br><span class="line">  <span class="attribute">left</span>: <span class="number">0</span>;</span><br><span class="line">  <span class="attribute">width</span>: <span class="number">100%</span>;</span><br><span class="line">  <span class="attribute">z-index</span>: <span class="number">1</span>;</span><br><span class="line">  <span class="attribute">overflow</span>: hidden;</span><br><span class="line"></span><br><span class="line">  <span class="selector-class">.capture-rectangle</span> &#123;</span><br><span class="line">    <span class="attribute">margin</span>: <span class="built_in">remB</span>(<span class="number">200</span>) auto <span class="number">0</span>;</span><br><span class="line">    <span class="attribute">width</span>: <span class="built_in">remB</span>(<span class="number">700</span>);  // 这里写上我们需要裁切的宽</span><br><span class="line">    <span class="attribute">height</span>: <span class="built_in">remB</span>(<span class="number">450</span>); // 这里写上我们需要裁切的高</span><br><span class="line">    <span class="attribute">border</span>: <span class="number">1px</span> solid <span class="number">#fff</span>;</span><br><span class="line">    <span class="attribute">border-radius</span>: <span class="built_in">remB</span>(<span class="number">20</span>);</span><br><span class="line">    <span class="attribute">z-index</span>: <span class="number">2</span>;</span><br><span class="line">    <span class="attribute">box-shadow</span>: <span class="number">0</span> <span class="number">0</span> <span class="number">0</span> <span class="built_in">remB</span>(<span class="number">1000</span>) <span class="built_in">rgba</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0.7</span>); // 外层阴影</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p><strong>当前效果：</strong></p>
+<p align="center">
+    <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4e4c33994f0e4c23a21265b91f43dc7a~tplv-k3u1fbpfcp-zoom-1.image" width="40%" />
+</p>
+
+<h3 id="完成实时照片裁切，上传服务端进行OCR识别"><a href="#完成实时照片裁切，上传服务端进行OCR识别" class="headerlink" title="完成实时照片裁切，上传服务端进行OCR识别"></a>完成实时照片裁切，上传服务端进行OCR识别</h3><hr>
+<p>裁切用到的是 <code>canvas.getContext(&#39;2d).drawImage</code> 的能力。<br><code>void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);</code></p>
+<blockquote>
+<p><strong>MDN对该属性说明：</strong><br><code>image</code>绘制到上下文的元素。允许任何的 canvas 图像源(<a href="https://developer.mozilla.org/zh-CN/docs/Web/API/CanvasImageSource"><code>CanvasImageSource</code></a>)，例如：<a href="https://developer.mozilla.org/en-US/docs/Web/API/CSSImageValue"><code>CSSImageValue</code> (en-US)</a>，<a href="https://developer.mozilla.org/zh-CN/docs/Web/API/HTMLImageElement"><code>HTMLImageElement</code></a>，<a href="https://developer.mozilla.org/en-US/docs/Web/API/SVGImageElement"><code>SVGImageElement</code> (en-US)</a>，<a href="https://developer.mozilla.org/zh-CN/docs/Web/API/HTMLVideoElement"><code>HTMLVideoElement</code></a>，<a href="https://developer.mozilla.org/zh-CN/docs/Web/API/HTMLCanvasElement"><code>HTMLCanvasElement</code></a>，<a href="https://developer.mozilla.org/zh-CN/docs/Web/API/ImageBitmap"><code>ImageBitmap</code></a> 或者<a href="https://developer.mozilla.org/zh-CN/docs/Web/API/OffscreenCanvas"><code>OffscreenCanvas</code></a>。<br><a href="https://developer.mozilla.org/zh-CN/docs/Web/API/CanvasRenderingContext2D/drawImage">https://developer.mozilla.org/zh-CN/docs/Web/API/CanvasRenderingContext2D/drawImage</a></p>
+</blockquote>
+<p>可以我们传入 <code>video</code> 作为 <code>source</code> 进行裁切。<br><strong>这里要注意</strong></p>
+<ul>
+<li><code>sx</code> 和 <code>sy</code> 对应的是距离真实 <code>video</code> 元素的 <code>top</code> <code>left</code> 距离，不是页面中 <code>video</code> 的大小，拿到裁切框位置大小之后，需要做转换，再进行裁切，否则裁切位置会对不上。<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 获取video中对应的真实size</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">getXYRatio</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="comment">// videoHeight为video 真实高度</span></span><br><span class="line">  <span class="comment">// offsetHeight为video css高度</span></span><br><span class="line">  <span class="keyword">const</span> &#123; <span class="attr">videoHeight</span>: vh, <span class="attr">videoWidth</span>: vw, <span class="attr">offsetHeight</span>: oh, <span class="attr">offsetWidth</span>: ow &#125; = video;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> &#123;</span><br><span class="line">    <span class="attr">yRatio</span>: <span class="function"><span class="params">height</span> =&gt;</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> (vh / oh) * height;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">xRatio</span>: <span class="function"><span class="params">width</span> =&gt;</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> (vw / ow) * width;</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+</li>
+</ul>
+<p>在调用 <code>getUserMediaStream</code> 成功之后，我们开始捕捉视频流，每隔几秒进行截图，发送到服务器。</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">/** 裁切上传相关核心代码  */</span></span><br><span class="line"><span class="keyword">const</span> Photo = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">		<span class="keyword">const</span> [videoHeight, setVideoHeight] = useState(<span class="number">0</span>);</span><br><span class="line">    <span class="keyword">const</span> ref = useRef(<span class="literal">null</span>);</span><br><span class="line"></span><br><span class="line">    useEffect(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> video = <span class="built_in">document</span>.getElementById(<span class="string">&#x27;video&#x27;</span>);</span><br><span class="line">        <span class="keyword">const</span> rectangle = <span class="built_in">document</span>.getElementById(<span class="string">&#x27;capture-rectangle&#x27;</span>);</span><br><span class="line">        <span class="keyword">const</span> _canvas = <span class="built_in">document</span>.createElement(<span class="string">&#x27;canvas&#x27;</span>);</span><br><span class="line">        _canvas.style.display = <span class="string">&#x27;block&#x27;</span>;</span><br><span class="line"></span><br><span class="line">        getUserMediaStream(video)</span><br><span class="line">            .then(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">                setVideoHeight(video.offsetHeight);</span><br><span class="line">                startCapture();</span><br><span class="line">            &#125;)</span><br><span class="line">            .catch(<span class="function"><span class="params">err</span> =&gt;</span> &#123;</span><br><span class="line">                showFail(&#123;</span><br><span class="line">                  <span class="attr">text</span>: <span class="string">&#x27;无法调起后置摄像头，请点击相册，手动上传身份证&#x27;</span>,</span><br><span class="line">                  <span class="attr">duration</span>: <span class="number">6</span>,</span><br><span class="line">                &#125;);</span><br><span class="line">            &#125;);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">function</span> <span class="title">startCapture</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">          ref.current = <span class="built_in">setInterval</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">            <span class="keyword">const</span> &#123; yRatio, xRatio &#125; = getXYRatio();</span><br><span class="line">            <span class="comment">/** 获取裁切框的位置 */</span></span><br><span class="line">            <span class="keyword">const</span> &#123; left, top, width, height &#125; = rectangle.getBoundingClientRect();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">const</span> context = _canvas.getContext(<span class="string">&#x27;2d&#x27;</span>);</span><br><span class="line">            _canvas.width = width;</span><br><span class="line">            _canvas.height = height;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);</span></span><br><span class="line">            context.drawImage(</span><br><span class="line">              video,</span><br><span class="line">              xRatio(left + <span class="built_in">window</span>.scrollX),</span><br><span class="line">              yRatio(top + <span class="built_in">window</span>.scrollY),</span><br><span class="line">              xRatio(width),</span><br><span class="line">              yRatio(height),</span><br><span class="line">              <span class="number">0</span>,</span><br><span class="line">              <span class="number">0</span>,</span><br><span class="line">              width,</span><br><span class="line">              height,</span><br><span class="line">            );</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 获取当前截图的base64编码</span></span><br><span class="line">            <span class="keyword">const</span> base64 = _canvas.toDataURL(<span class="string">&#x27;image/jpeg&#x27;</span>);</span><br><span class="line">            <span class="comment">// 这里可以再根据场景做base64压缩</span></span><br><span class="line">            <span class="comment">// 每2秒调用OCR接口，上传base64到服务端进行识别</span></span><br><span class="line">          &#125;, <span class="number">2000</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/** 清空定时器 */</span></span><br><span class="line">        <span class="keyword">return</span> <span class="function">() =&gt;</span> <span class="built_in">clearInterval</span>(ref.current);</span><br><span class="line">    &#125;, []);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p><strong>注意：</strong><br><code>sx</code> 、 <code>sy</code> 的值是相对根元素的，通过 <code>getBoundingClientRect</code> 拿到的 <code>top</code> 和 <code>left</code> 是相当于视口的，需要加上 <code>scroll</code> 的值。</p>
+<h2 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h2><p>实际上 <code>getUserMedia</code>  在安卓和 <code>MacOs</code> 上跑起来几乎没有问题，但是社区中对于该 <code>api</code> 的讨论太少了，可能大部分人甚至不知道这个 <code>api</code> 的存在，在 <code>ios</code> 真机上进行调试时，一开始只展示有一帧，便静止了，报错不会给予开发者比较详细的提示，我一开始大部分时间都花在了研究 <code>ios</code> 端为什么无法正常调用该 <code>api</code> 。不过这种业务场景在 <code>app</code> 上应该是比较常见的，本文仅为h5该业务场景的实现方式。</p>
+<p><strong>附一张最终效果图：</strong></p>
+<p align="center">
+    <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7f3b8bfd242a470ebc26f6336b9177fa~tplv-k3u1fbpfcp-zoom-1.image" width="40%" />
+</p>
+
+
+<h2 id="References"><a href="#References" class="headerlink" title="References"></a>References</h2><p>1.iOS13 getUserMedia not working on chrome and edge<br><a href="https://stackoverflow.com/questions/63084076/ios13-getusermedia-not-working-on-chrome-and-edge">https://stackoverflow.com/questions/63084076/ios13-getusermedia-not-working-on-chrome-and-edge</a><br><a href="https://bugs.webkit.org/show_bug.cgi?id=208667">https://bugs.webkit.org/show_bug.cgi?id=208667</a><br>It prevents ALL other browsers on iOS to offer video-conferencing, while Safari can =&gt; it’s a nasty anti-competitive behaviour that will for sure be scrutinized by US House Antitrust Committee &amp; EU Commission, and Apple should not accumulate evidence of evil conduct.</p>
+<p>2.MDN getUserMedia <a href="https://developer.mozilla.org/zh-CN/docs/Web/API/MediaDevices/getUserMedia">https://developer.mozilla.org/zh-CN/docs/Web/API/MediaDevices/getUserMedia</a></p>
+<p>3.ios10+视频播放新策略 <a href="https://imququ.com/post/new-video-policies-for-ios10.html">https://imququ.com/post/new-video-policies-for-ios10.html</a></p>
+]]></content>
+      <tags>
+        <tag>h5</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>h5调试技巧</title>
+    <url>/2021/03/25/h5%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7/</url>
+    <content><![CDATA[<h2 id="前述"><a href="#前述" class="headerlink" title="前述"></a>前述</h2><blockquote>
+<p>本文仅介绍非抓包之外的其它调试技巧<br>我们已经习惯了模拟器进行调试，那为什么还需要进行本地真机调试？<br>举个例子：</p>
+</blockquote>
+<ul>
+<li><code>ios</code>真机环境，我们收到短信验证码后，点击复制，<code>ios</code>系统层面会存在<code>bug</code>，剪切下来的验证码会被重复两遍，例如收到的验证码为<code>123456</code>，但是实际复制后到剪切板的就变成了<code>123456123456</code>。</li>
+</ul>
+<p>如果你对<code>「各端h5的坑」</code>了解不深。没有使用真机调试的方式，就无法在本地调试的阶段就发现潜在的问题。</p>
+<h2 id="利用Chrome进行真机调试"><a href="#利用Chrome进行真机调试" class="headerlink" title="利用Chrome进行真机调试"></a>利用Chrome进行真机调试</h2><blockquote>
+<p>为什么真机测试是必要的？</p>
+</blockquote>
+<h3 id="首先分享一个坑"><a href="#首先分享一个坑" class="headerlink" title="首先分享一个坑"></a>首先分享一个坑</h3><p>一开始，为了实现一屏完全填充，考虑到移动端对<code>vw</code>，<code>vh</code>完美支持的情况下，我使用如下代码对宽高进行控制</p>
+<figure class="highlight css"><table><tr><td class="code"><pre><span class="line"><span class="selector-tag">html</span>, <span class="selector-tag">body</span> &#123;</span><br><span class="line">  <span class="attribute">height</span>: <span class="number">100vh</span>;</span><br><span class="line">  <span class="attribute">width</span>: <span class="number">100vw</span>;</span><br><span class="line">  <span class="attribute">background-color</span>: blue;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>好的，让我们看看效果，在模拟器上，表现很完美，整整一屏的<code>blue</code>，这样看起来是没有问题的。<br><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/033457f5d860488e93198d121bc7d7a4~tplv-k3u1fbpfcp-zoom-1.image" width="40%" /></p>
+<h3 id="真机调试步骤"><a href="#真机调试步骤" class="headerlink" title="真机调试步骤"></a>真机调试步骤</h3><h4 id="准备项"><a href="#准备项" class="headerlink" title="准备项"></a>准备项</h4><ul>
+<li><p>首先确保你有一根双向<code>Type-c</code>的线（😭 我没有，就把<code>mac</code>充电器的线接到手机上了）</p>
+</li>
+<li><p>接下来，用线将手机和电脑连到一起</p>
+</li>
+<li><p>打开手机的<code>Chrome</code></p>
+</li>
+<li><p>在完成电脑与手机之后，在电脑<code>Chrome</code>中输入以下地址：</p>
+</li>
+<li><p><code>chrome://inspect/#devices</code></p>
+</li>
+</ul>
+<h4 id="如何判断链接成功？"><a href="#如何判断链接成功？" class="headerlink" title="如何判断链接成功？"></a>如何判断链接成功？</h4><p>如果你能看到<code>Chrome</code>识别出了你的移动设备，并且可以看到当前<code>Chrome</code>浏览历史页面列表，证明你链接成功了！</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/11db1b77daf54635a9c13390054529ef~tplv-k3u1fbpfcp-zoom-1.image" alt="image.png"></p>
+<h4 id="开始真机调试"><a href="#开始真机调试" class="headerlink" title="开始真机调试"></a>开始真机调试</h4><p>接下来，我们可以在 <strong><code>chrome://inspect/#devices</code> 页打开一个我们想要进行调试的页面</strong><br><strong>这里我们打开第一步：</strong><code>On Your Network</code>: <a href="https://192.168.12.247:3000/">https://192.168.12.247:3000</a>的页面<br><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/82607a4f98e84c9ea4819f2f02093ccd~tplv-k3u1fbpfcp-zoom-1.image" alt="image.png"></p>
+<h4 id="回到一开始的问题，真机调试会有什么问题呢？"><a href="#回到一开始的问题，真机调试会有什么问题呢？" class="headerlink" title="回到一开始的问题，真机调试会有什么问题呢？"></a>回到一开始的问题，真机调试会有什么问题呢？</h4><p>可以看到，由于模拟器没有<code>address bar</code>，无法让我们发现问题，到了移动端之后，<code>100vh</code>实际会溢出，就出现滚动条了，并不是我们预期的效果。<br><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/eec016fce0394d509894a370253847a8~tplv-k3u1fbpfcp-zoom-1.image" alt="image.png"></p>
+<p>有一些人提出如下解决方案，但是在实践中发现，安卓真机打开键盘会导致<code>body</code>元素高度减少，收起键盘之后，<code>body</code>高度不会变回去，导致原键盘区域为空白。</p>
+<figure class="highlight css"><table><tr><td class="code"><pre><span class="line"><span class="comment">/* 存在问题的方案 */</span></span><br><span class="line"><span class="selector-tag">html</span>, <span class="selector-tag">body</span> &#123;</span><br><span class="line">  <span class="attribute">height</span>: -moz-available;</span><br><span class="line">  <span class="attribute">height</span>: fill-available;</span><br><span class="line">  <span class="attribute">height</span>: -webkit-fill-available; <span class="comment">/* 表示撑满可用空间（包括高度，宽度）*/</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>解决方法：</p>
+<figure class="highlight css"><table><tr><td class="code"><pre><span class="line"><span class="comment">/* 最终方案 */</span></span><br><span class="line"><span class="selector-tag">html</span>, <span class="selector-tag">body</span> &#123;</span><br><span class="line">  <span class="attribute">min-height</span>: <span class="number">100%</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="使用vConsole插件"><a href="#使用vConsole插件" class="headerlink" title="使用vConsole插件"></a>使用vConsole插件</h2><blockquote>
+<p>进行小程序开发的各位应该对<code>vConsole</code>很熟悉了吧，但是我一开始也以为这个插件是小程序底层内置的，实际上在h5中我们也可以引入这个插件。</p>
+</blockquote>
+<hr>
+<h3 id="直接引入"><a href="#直接引入" class="headerlink" title="直接引入"></a>直接引入</h3><blockquote>
+<p><a href="https://github.com/Tencent/vConsole">https://github.com/Tencent/vConsole</a></p>
+</blockquote>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">// index.js</span></span><br><span class="line"><span class="keyword">import</span> vconsole <span class="keyword">from</span> <span class="string">&#x27;vconsole&#x27;</span> </span><br><span class="line"><span class="keyword">const</span> vConsole = <span class="keyword">new</span> VConsole();</span><br></pre></td></tr></table></figure>
+<h3 id="通过Webpack插件形式引入"><a href="#通过Webpack插件形式引入" class="headerlink" title="通过Webpack插件形式引入"></a>通过Webpack插件形式引入</h3><blockquote>
+<p><a href="https://github.com/diamont1001/vconsole-webpack-plugin">https://github.com/diamont1001/vconsole-webpack-plugin</a></p>
+</blockquote>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">//webpack.config.js</span></span><br><span class="line"><span class="comment">/** 以下为伪代码 */</span></span><br><span class="line"><span class="keyword">const</span> vConsolePlugin = <span class="built_in">require</span>(<span class="string">&#x27;vconsole-webpack-plugin&#x27;</span>);</span><br><span class="line"></span><br><span class="line">plugins: [</span><br><span class="line">  isEnvDevelopment &amp;&amp;</span><br><span class="line">    <span class="keyword">new</span> vConsolePlugin(&#123;</span><br><span class="line">      <span class="attr">filter</span>: [],</span><br><span class="line">      <span class="attr">enable</span>: isEnvDevelopment,</span><br><span class="line">   &#125;),</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+
+<h2 id="使用内网ip进行真机调试"><a href="#使用内网ip进行真机调试" class="headerlink" title="使用内网ip进行真机调试"></a>使用内网ip进行真机调试</h2><h3 id="如何获取本地ip？"><a href="#如何获取本地ip？" class="headerlink" title="如何获取本地ip？"></a>如何获取本地ip？</h3><p>如果你通过<code>npm run dev</code>启动本地<code>dev</code>环境，并且项目是基于<code>create-react-app</code>或<code>vue-cli</code>搭建项目的时候，由于封装的脚手架中配置了<code>webpack</code>相关的<code>plugin</code>，项目运行成功后会在命令行中有一些提示，不知你有没有注意过<code>terminal</code>提示里的第三行地址？</p>
+<p><strong><code>On Your Network: https://192.168.12.247:3000</code></strong></p>
+<img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4bf0c81808cd4a499ed25c65e5093c35~tplv-k3u1fbpfcp-zoom-1.image" width="50%" />
+
+<p>如果你的项目没有使用<code>webpack</code>，或没有配置相关<code>plugins</code>，看不到<code>**On Your Network</code>**也没有关系<br>可以通过如下方式获取内网<code>ip</code></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ifconfig | grep <span class="string">&quot;inet &quot;</span> | grep -v 127.0.0.1</span><br><span class="line"></span><br><span class="line"><span class="comment"># 执行结果</span></span><br><span class="line"><span class="comment"># inet 192.168.12.247 netmask 0xfffffc00 broadcast 192.168.15.255</span></span><br><span class="line"><span class="comment"># 这里 192.168.12.247 就是本机的内网ip</span></span><br></pre></td></tr></table></figure>
+
+<p>在真机<code>Chrome</code>中输入<code>https://192.168.12.247:3000</code>，可以看到手机后置摄像头的画面在页面中通过<code>video</code>成功渲染。<br>对于这种例如需要使用后置摄像头的业务场景，我们只能使用真机进行实时调试（谁让<code>Mbp</code>自身不带后置摄像头呢？😭 ）</p>
+<img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/da3a50056ed54fcc809558ac474e1756~tplv-k3u1fbpfcp-zoom-1.image" width="30%"/>
+
+
+
+<h3 id="在手机浏览器中手动输入地址，进行移动端调试很麻烦？"><a href="#在手机浏览器中手动输入地址，进行移动端调试很麻烦？" class="headerlink" title="在手机浏览器中手动输入地址，进行移动端调试很麻烦？"></a>在手机浏览器中手动输入地址，进行移动端调试很麻烦？</h3><p>这里提供一个<code>Chrome</code>插件，可以直接生成二维码<br><a href="https://chrome.google.com/webstore/detail/qr-code-generator/afpbjjgbdimpioenaedcjgkaigggcdpp">https://chrome.google.com/webstore/detail/qr-code-generator/afpbjjgbdimpioenaedcjgkaigggcdpp</a>（需要科学上网）<br><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cbeb31635ef0420293d963016e102646~tplv-k3u1fbpfcp-zoom-1.image" alt="image.png"></p>
+<h3 id="FAQ"><a href="#FAQ" class="headerlink" title="FAQ"></a>FAQ</h3><h4 id="点击inspect后，弹出的Devtools工具白屏，提示http1-1-404"><a href="#点击inspect后，弹出的Devtools工具白屏，提示http1-1-404" class="headerlink" title="点击inspect后，弹出的Devtools工具白屏，提示http1.1 404"></a>点击inspect后，弹出的Devtools工具白屏，提示http1.1 404</h4><ul>
+<li>需要查看手机<code>Chrome</code>版本和电脑<code>Chrome</code>版本是否一致，需要对齐版本</li>
+</ul>
+<p>仍然无法打开<code>Devtools</code>则需要科学上学</p>
+<h4 id="访问内网http环境无法通过MediaDevices-getUserMedia获取视频，音频流"><a href="#访问内网http环境无法通过MediaDevices-getUserMedia获取视频，音频流" class="headerlink" title="访问内网http环境无法通过MediaDevices.getUserMedia获取视频，音频流"></a>访问内网http环境无法通过MediaDevices.getUserMedia获取视频，音频流</h4><blockquote>
+<p>由于<code>Chrome</code>的限制，只有<code>https</code>可以获取到流，<code>http</code>则无法获取</p>
+</blockquote>
+<p>可以通过<code>chrome://flags/</code>在白名单中设置<code>ip</code>来解决问题<br><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/27be3b0199814a0b9f476b9ff5e3b639~tplv-k3u1fbpfcp-zoom-1.image" alt="image.png"></p>
+<h2 id="谢谢大家❤️"><a href="#谢谢大家❤️" class="headerlink" title="谢谢大家❤️"></a>谢谢大家❤️</h2><p>我的分享到这里就结束了，如果还有什么疑问或者建议，欢迎一起交流讨论，可以添加我的微信<code>actuallys</code>，分享、点赞、在看三连～！</p>
+]]></content>
+      <tags>
+        <tag>h5</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>如何为Chrome提issues？</title>
+    <url>/2021/05/12/%E5%A6%82%E4%BD%95%E4%B8%BAChrome%E6%8F%90issues%EF%BC%9F/</url>
+    <content><![CDATA[<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>在<code>H5</code>上传文件业务开发过程中，上传功能需要让用户上传 <code>图片/pdf</code> 文件，我们很容易想到，只需要改变<code>input</code>的<code>accept</code>属性就好了，我们使用的<code>accept</code>属性如下。</p>
+<p><code>&lt;input accept=&quot;image/jpeg,image/jpg,image/png,application/pdf&quot; type=&quot;file&quot; /&gt;</code></p>
+<p>但是在安卓真机<code>Chrome</code>上测试时，发生了一些问题。</p>
+<img src="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4c6fd1c00f5245d8b88dd239bdcd3390~tplv-k3u1fbpfcp-watermark.image" width="200" />
+
+<p>可以看到，我们点击<code>Choose File</code>之后，出现了2个不应该出现的按钮，<code>Camcorder</code> 和 <code>Recorder</code>。<br>通过排查，我判断是<code>Chrome</code>自身的问题，那么如何为<code>Chrome</code>提issues呢？</p>
+<h2 id="在哪里为Chrome提Issues？"><a href="#在哪里为Chrome提Issues？" class="headerlink" title="在哪里为Chrome提Issues？"></a>在哪里为Chrome提Issues？</h2><p><a href="https://bugs.chromium.org/p/chromium/issues/list">https://bugs.chromium.org/p/chromium/issues/list</a></p>
+<p>可能这里有人会说，这不是<code>chromium</code>的bug区吗，并不是<code>Chrome</code>。</p>
+<p>这里简单科普一下：</p>
+<ul>
+<li><p><code>Chromium</code>是谷歌的一个开源项目，所有的开发者们都可以去共同改进它。</p>
+</li>
+<li><p><code>Chrome</code>不是开源项目，谷歌会把<code>Chromium</code>的东西更新到<code>Chrome</code>中。所以<code>Chromium</code>更像是体验版，而<code>Chrome</code>是正式版。</p>
+</li>
+</ul>
+<h2 id="提issues步骤"><a href="#提issues步骤" class="headerlink" title="提issues步骤"></a>提issues步骤</h2><h4 id="进入Issues页面"><a href="#进入Issues页面" class="headerlink" title="进入Issues页面"></a>进入Issues页面</h4><p>我们打开 <a href="https://bugs.chromium.org/p/chromium/issues/list">https://bugs.chromium.org/p/chromium/issues/list</a> 页面<br><img src="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/97d0e38dfe0b49649d6a18af44e0409a~tplv-k3u1fbpfcp-watermark.image" alt="0.png"></p>
+<h4 id="填写机型环境信息"><a href="#填写机型环境信息" class="headerlink" title="填写机型环境信息"></a>填写机型环境信息</h4><p>这里<code>Chrome versions</code>，网站会自动帮我们进行识别。由于是在PC上填写，我们需要填写自己的移动设备系统与版本。</p>
+<div align="center">
+    <img src="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4810e733663846fcbba5643e422019ef~tplv-k3u1fbpfcp-watermark.image" width="500" />
+</div>
+
+<h4 id="选择issues类型"><a href="#选择issues类型" class="headerlink" title="选择issues类型"></a>选择issues类型</h4><p>由于我们是开发者，直接选择<code>Web developer</code></p>
+<p>上述问题属于浏览器<code>API</code>的问题，我们选择 <code>API</code></p>
+<div align="center">
+    <img src="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/82c67571c8f34f059cf2fd28e10414f1~tplv-k3u1fbpfcp-watermark.image" width="500" />
+</div>
+
+<h4 id="详细描述我们的问题"><a href="#详细描述我们的问题" class="headerlink" title="详细描述我们的问题"></a>详细描述我们的问题</h4><p>这里建议上传源代码，或者提供一个<code>codesandbox</code>。这里由于我的问题比较简单，我只上传了一个<code>html</code>页面。<br>为了让<code>Chrome</code>维护人员更好的复现bug，我上传了4张图片，也提供了在<code>firefox</code>的表现（在firefox上是正常的，没有bug）</p>
+<div align="center">
+    <img src="https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/e11f9836724e48ae9196244f4444041d~tplv-k3u1fbpfcp-watermark.image" width="500" />
+</div>
+
+<p>为<code>Chrome</code>提issues的讲解到这里就结束啦，</p>
+<p>以下为我提的issues链接，欢迎一起围观：</p>
+<p><a href="https://bugs.chromium.org/p/chromium/issues/detail?id=120435">https://bugs.chromium.org/p/chromium/issues/detail?id=120435</a></p>
+<hr>
+<p>以下为问题详细描述</p>
+<h2 id="上文具体Case分析"><a href="#上文具体Case分析" class="headerlink" title="上文具体Case分析"></a>上文具体Case分析</h2><h3 id="关于h5上传popup出现录音、摄像按钮的bug。"><a href="#关于h5上传popup出现录音、摄像按钮的bug。" class="headerlink" title="关于h5上传popup出现录音、摄像按钮的bug。"></a>关于h5上传popup出现录音、摄像按钮的bug。</h3><p>以下是我们的最简复现页面：</p>
+<div align="center">
+    <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/30f8418d7bba473e974cffb8f283e333~tplv-k3u1fbpfcp-watermark.image" width="320" />
+</div>
+
+<p>点击第一行的<code>&lt;input id=&quot;1&quot; accept=&quot;image/jpeg,image/jpg,image/png&quot; type=&quot;file&quot; /&gt;</code>按钮</p>
+<p>可以看到<code>Chrome</code>的表现是正常的</p>
+<div align="center">
+    <img src="https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/e9b0c022af0d48908de0b8abaa1fdcc9~tplv-k3u1fbpfcp-watermark.image" width="320" />
+</div>
+
+<p>点击第二行的<code>&lt;input accept=&quot;image/jpeg,image/jpg,image/png,application/pdf&quot; type=&quot;file&quot; /&gt;</code>按钮</p>
+<p>可以看到弹出了4个按钮，但是多出了<code>Camcorder</code>和<code>Recoder</code>，这就不正常了，我们并没有在accept中声明要求用户上传这2种格式的文件</p>
+<div align="center">
+    <img src="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4c6fd1c00f5245d8b88dd239bdcd3390~tplv-k3u1fbpfcp-watermark.image" width="320" />
+</div>
+
+<p>那么在Firefox的表现呢？点击第二行的按钮，可以看到Everything is fine。。所以我们可以确定该bug为Chrome自身的问题。</p>
+<div align="center">
+    <img src="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6f1ff58477d64e4898f057fd8421ccb6~tplv-k3u1fbpfcp-watermark.image" width="320" />
+</div>
+
+<h3 id="如何自行兼容？"><a href="#如何自行兼容？" class="headerlink" title="如何自行兼容？"></a>如何自行兼容？</h3><p>在<code>input</code>的<code>onChange</code>回调中根据<code>files</code>进行自行判断，如果用户上传的类型不对，就舍弃掉该文件，给用户<code>tips</code>提示。</p>
+<hr>
+<p><strong>以下为我提的issues</strong></p>
+<p>欢迎大家一起围观：</p>
+<p><a href="https://bugs.chromium.org/p/chromium/issues/detail?id=1204359">https://bugs.chromium.org/p/chromium/issues/detail?id=1204359</a></p>
+]]></content>
+  </entry>
+  <entry>
+    <title>有意思的bug（一）</title>
+    <url>/2021/05/24/%E6%9C%89%E6%84%8F%E6%80%9D%E7%9A%84bug%EF%BC%88%E4%B8%80%EF%BC%89/</url>
+    <content><![CDATA[<h2 id="h5-wxsdk分享好友、朋友圈图片不展示"><a href="#h5-wxsdk分享好友、朋友圈图片不展示" class="headerlink" title="h5 wxsdk分享好友、朋友圈图片不展示"></a>h5 wxsdk分享好友、朋友圈图片不展示</h2><p>这个bug很有意思，表现是有些图片会展示，有些图片不展示。</p>
+<p>于是我想到可能是<code>webpack</code>打包的问题</p>
+<p>由于项目是通过脚手架搭建的，我们找到<code>url-loader</code>，可以看到<code>options</code>中有<code>imageInlineSizeLimit</code>。</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// webpack.config.js</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="attr">test</span>: [<span class="regexp">/\.bmp$/</span>, <span class="regexp">/\.gif$/</span>, <span class="regexp">/\.jpe?g$/</span>, <span class="regexp">/\.png$/</span>],</span><br><span class="line">    <span class="attr">loader</span>: <span class="built_in">require</span>.resolve(<span class="string">&#x27;url-loader&#x27;</span>),</span><br><span class="line">    <span class="attr">options</span>: &#123;</span><br><span class="line">        <span class="attr">limit</span>: imageInlineSizeLimit,</span><br><span class="line">        <span class="attr">name</span>: <span class="string">&#x27;static/media/[name].[hash:8].[ext]&#x27;</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">&#125;,</span><br></pre></td></tr></table></figure>
+<p><code>const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || &#39;10000&#39;);</code></p>
+<p>那么原因就很清晰了，大于10000的会打包成<code>base64</code>，微信读取不了base64为封面图，所以无法展示。</p>
+<h2 id="ios无法解析YYYY-MM-DD"><a href="#ios无法解析YYYY-MM-DD" class="headerlink" title="ios无法解析YYYY-MM-DD"></a>ios无法解析YYYY-MM-DD</h2><p>事情是这样的，有人说小程序有页面白屏，我是安卓手机，简单排查了一下，没有复现出来。于是看了下日志，大部分机型为ios，于是借了一台iPhone手机，真机一看，还真是白屏。</p>
+<p>在<code>vConsole</code>中查看报错，看到了<code>Invalid Date</code></p>
+<p>问题源头找到了，在苹果系统无法解析<code>YYYY-MM-DD HH:mm:ss</code>这种日期格式，当然解决方案很简单，只要将<code>-</code>替换为<code>/</code>即可<br><code>new Date(date.replace(/\-/g, &quot;/&quot;));</code></p>
+<p>但实际上在安卓系统上解析这种日期格式完全无问题。<br>例如<code>new Date(&quot;2019-03-31 21:30:00&quot;);</code>是可以正常解析的</p>
+<p>像这种问题就和经验很有关系，如果遇到一次，下次绝对不会踩坑了</p>
+<h2 id="Chrome弹出自动翻译问题"><a href="#Chrome弹出自动翻译问题" class="headerlink" title="Chrome弹出自动翻译问题"></a>Chrome弹出自动翻译问题</h2><p>背景是这样的，一开始在本地进行测试，是没有问题的，在Chrome下不会弹出自动翻译弹窗，但是发到线上之后，一进入网页，就会自动弹出是否要翻译成中文的弹窗，体验很差。</p>
+<p>这就很奇怪，莫非是页面的英文字母太多了吗，简单google了一下，并没有查到自动翻译弹出的规则</p>
+<p>灵机一动，想到是不是html模板的问题</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="meta">&lt;!DOCTYPE <span class="meta-keyword">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span> <span class="attr">lang</span>=<span class="string">&quot;en&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">&quot;utf-8&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">meta</span> <span class="attr">name</span>=<span class="string">&quot;viewport&quot;</span> <span class="attr">content</span>=<span class="string">&quot;width=device-width, initial-scale=1.0,minimum-scale=1.0, maximum-scale=1.0, user-scalable=no&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">title</span>&gt;</span>demo<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">noscript</span>&gt;</span>You need to enable JavaScript to run this app.<span class="tag">&lt;/<span class="name">noscript</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;root&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>重点在这行<code>&lt;html lang=&quot;en&quot;&gt;</code>，设置了<code>lang=&quot;en&quot;</code>，脚手架用惯了，反而忽视了最基本的东西。</p>
+<p><a href="https://www.w3schools.com/tags/ref_language_codes.asp">https://www.w3schools.com/tags/ref_language_codes.asp</a></p>
+<p>通过查阅w3c官网，我们设置<code>lang=&quot;zh&quot;</code>，问题顺利解决。</p>
+]]></content>
+      <tags>
+        <tag>bug</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>超好用的React脚手架，快来试试吧</title>
+    <url>/2021/04/25/%E8%B6%85%E5%A5%BD%E7%94%A8%E7%9A%84React%E8%84%9A%E6%89%8B%E6%9E%B6%EF%BC%8C%E5%BF%AB%E6%9D%A5%E8%AF%95%E8%AF%95%E5%90%A7/</url>
+    <content><![CDATA[<blockquote>
+<p>自建脚手架地址，觉得好用的话欢迎点个✨：<br><a href="https://github.com/ericlee33/create-compositive-react-app-cli">https://github.com/ericlee33/create-compositive-react-app-cli</a></p>
+</blockquote>
+<p><strong>效果图</strong><br><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/bf4e4c991aad4ce099f5f492191d4796~tplv-k3u1fbpfcp-zoom-1.image"></p>
+<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><ul>
+<li>由于最近公司内，立项了多个不同业务，项目之间相互独立，但底层架构相似，从0搭建新项目变成了很寻常的事情，当你一个事情做多了之后，就感觉到很难受，作为一个工具人，需要想办法解决掉这个问题。</li>
+</ul>
+<ul>
+<li>当通过<code>create-react-app</code>创建项目模板之后，还需要删除掉一堆不需要的东西，安装很多框架生态链，Linter等依赖，完成install后，还要配置项目底层各种东西，很耗费精力和时间。</li>
+</ul>
+<h2 id="FB已经提供了create-react-app，为什么还要做react脚手架？"><a href="#FB已经提供了create-react-app，为什么还要做react脚手架？" class="headerlink" title="FB已经提供了create-react-app，为什么还要做react脚手架？"></a>FB已经提供了create-react-app，为什么还要做react脚手架？</h2><h3 id="先谈谈vue-cli的优点"><a href="#先谈谈vue-cli的优点" class="headerlink" title="先谈谈vue-cli的优点"></a>先谈谈vue-cli的优点</h3><ul>
+<li>提供了可选配置项（由于<code>Vue</code>周边生态较为单一，官方提供的路由/状态管理方案只有一个，不像<code>React</code>生态光一个状态管理方案就有<code>MobX、Redux-Saga、Redux-Thunk</code>等等。。）</li>
+<li>令人舒适的<code>Inquirer</code>界面（不像<code>create-react-app</code>，通过执行脚手架时，传入不同<code>configuration</code>来创建不同需求的模板）</li>
+<li>提供保存配置的功能  <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/07defb28770c437c9e7f4be3f73ef1e9~tplv-k3u1fbpfcp-zoom-1.image" width="500" />
+  <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/391857c9c41a42f7857405a48ae1cb02~tplv-k3u1fbpfcp-zoom-1.image" width="500" />
+
+</li>
+</ul>
+<h3 id="create-react-app的缺点"><a href="#create-react-app的缺点" class="headerlink" title="create-react-app的缺点"></a>create-react-app的缺点</h3><p>在我看来，从0快速搭建项目的角度看，主要有以下几个问题</p>
+<ul>
+<li>未提供可选<code>react-router</code>路由配置的模板</li>
+<li>未提供状态管理<code>Lib</code></li>
+<li>没有提供<code>Linter</code>，<code>Coding</code>过程很不爽</li>
+<li>一些工具库<code>npm</code>包中没有<code>typing</code>文件，需要手动去安装<code>@types</code>无法享受<code>vscode</code>利用<code>@types</code>文件在<code>js</code>中也提供代码提示的快感。</li>
+</ul>
+<p>下面是官方文案提供的Router说明：</p>
+<blockquote>
+<p>Create React App 并未规定特定的Router(路由)解决方案，但 React Router 是最受欢迎的 Router(路由) 解决方案。<br>要添加它，请运行：</p>
+</blockquote>
+<blockquote>
+<p>或者你可以使用 <code>yarn</code>:<br>要尝试它，删除 <code>src/App.js</code> 中的所有代码，并将其替换为其网站上的任何示例。 <a href="https://reacttraining.com/react-router/web/example/basic">基本示例</a> 是开始尝试的好地方。<br>请注意，在部署应用程序之前，<a href="http://www.html.cn/create-react-app/docs/deployment#serving-apps-with-client-side-routing">你可能需要配置生产服务器以支持客户端路由</a>。</p>
+</blockquote>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install --save react-router-dom</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">yarn add react-router-dom</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h3 id="社区有没有现成方案呢？"><a href="#社区有没有现成方案呢？" class="headerlink" title="社区有没有现成方案呢？"></a>社区有没有现成方案呢？</h3><ul>
+<li>在 <code>github</code> 上搜索 <code>react-scaffold</code> 、<code>react脚手架</code> ，很难在社区中找到一个完整满足自己需求的脚手架</li>
+</ul>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4361d13c1f4549e79ffba727c509e8bc~tplv-k3u1fbpfcp-zoom-1.image" alt="image.png"></p>
+<ul>
+<li>可以看到搜索结果大多是<code>Archived</code>或无人维护的项目。</li>
+</ul>
+<h2 id="开始自制脚手架"><a href="#开始自制脚手架" class="headerlink" title="开始自制脚手架"></a>开始自制脚手架</h2><p>为了解决以上<code>create-react-app</code>痛点，我决定仿照<code>vue-cli</code>，制作一个<code>react</code>的集成脚手架。</p>
+<h3 id="技术栈"><a href="#技术栈" class="headerlink" title="技术栈"></a>技术栈</h3><p>为了更方便开发脚手架，我们需要以下node工具🔧</p>
+<ul>
+<li><strong>commander</strong> 命令行</li>
+<li><strong>inquirer</strong> 交互式命令</li>
+<li><strong>ejs</strong> 模板渲染</li>
+<li><strong>execa</strong> 子进程管理工具</li>
+<li><strong>chalk</strong> 用于输出带颜色的log</li>
+<li><strong>ora</strong> 可以在命令行展示spinning</li>
+</ul>
+<h3 id="项目目录"><a href="#项目目录" class="headerlink" title="项目目录"></a>项目目录</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">.</span><br><span class="line">├── README.md</span><br><span class="line">├── bin</span><br><span class="line">│   └── index.js</span><br><span class="line">├── commitlint.config.js</span><br><span class="line">├── lib</span><br><span class="line">│   ├── Creator.js</span><br><span class="line">│   ├── Generator.js</span><br><span class="line">│   ├── PromptModuleAPI.js</span><br><span class="line">│   ├── config.js</span><br><span class="line">│   ├── create.js</span><br><span class="line">│   ├── defaultFeaturesPrompts.js</span><br><span class="line">│   ├── generator</span><br><span class="line">│   │   ├── linter</span><br><span class="line">│   │   │   ├── index.js</span><br><span class="line">│   │   │   └── template ...此处省略template文件</span><br><span class="line">│   │   ├── react</span><br><span class="line">│   │   │   ├── index.js</span><br><span class="line">│   │   │   └── template ...此处省略template文件</span><br><span class="line">│   │   ├── redux</span><br><span class="line">│   │   │   ├── index.js</span><br><span class="line">│   │   │   └── template ...此处省略template文件</span><br><span class="line">│   │   └── router</span><br><span class="line">│   │       ├── index.js</span><br><span class="line">│   │       └── template ...此处省略template文件</span><br><span class="line">│   ├── getPromptModules.js</span><br><span class="line">│   ├── promptModules</span><br><span class="line">│   │   ├── linter.js</span><br><span class="line">│   │   ├── moduleConstantsName.js</span><br><span class="line">│   │   ├── redux.js</span><br><span class="line">│   │   └── router.js</span><br><span class="line">│   ├── templates</span><br><span class="line">│   │   ├── components</span><br><span class="line">│   │   │   ├── index.jsx</span><br><span class="line">│   │   │   └── index.module.scss</span><br><span class="line">│   │   ├── config.js</span><br><span class="line">│   │   ├── createTemplate.js</span><br><span class="line">│   │   ├── templatePrompts.js</span><br><span class="line">│   │   └── views</span><br><span class="line">│   │       ├── index.jsx</span><br><span class="line">│   │       └── index.module.scss</span><br><span class="line">│   └── utils</span><br><span class="line">│       ├── chalk.js</span><br><span class="line">│       ├── copyDir.js</span><br><span class="line">│       ├── executeCommand.js</span><br><span class="line">│       └── isObject.js</span><br><span class="line">└── package.json</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="项目总结"><a href="#项目总结" class="headerlink" title="项目总结"></a>项目总结</h3><p>总结一下，主要是以下模块</p>
+<ul>
+<li><strong>/bin/index.js</strong></li>
+</ul>
+<p>命令行调用脚手架的入口<br>主要放置了<code>commander</code>命令</p>
+<ul>
+<li><strong>/lib/create.js</strong></li>
+</ul>
+<p>执行完在命令行输入的<code>commander</code>后，在这里执行变量注入与模板渲染等逻辑</p>
+<blockquote>
+<ol>
+<li>注入每种不同模板项，从其 <code>/lib/promptModules/$&#123;name&#125;</code> 增加不同的<code>prompts</code></li>
+<li>执行<code>inquirer</code></li>
+<li>根据用户所选项，拼接<code>package.json</code></li>
+<li>注入模板所需的<code>ejs</code>变量，通过<code>ejs</code>进行模板渲染，不同的配置项最终会生成不同的<code>react-app</code>项目模板</li>
+</ol>
+</blockquote>
+<ul>
+<li><strong>/lib/promptModules/</strong></li>
+</ul>
+<p>为<code>inquirer</code>注入不同的<code>prompts</code>选项</p>
+<ul>
+<li><strong>/lib/generator</strong></li>
+</ul>
+<p><code>React</code>项目模板，每一种模板，要求了不同配置项，会根据用户选择，动态注入到最终生成的项目中</p>
+<ul>
+<li><strong>/utils</strong></li>
+</ul>
+<p>工具</p>
+<ul>
+<li><strong>/templates</strong></li>
+</ul>
+<p><code>components</code>和<code>views</code>模板注入</p>
+<h3 id="未来优化项"><a href="#未来优化项" class="headerlink" title="未来优化项"></a>未来优化项</h3><ul>
+<li><code>ejs</code>注入可选项不友好，比如为了动态在<code>App.jsx</code>入口中，根据用户所选配置项判断是否<code>import React-Router、Redux</code>等，v1版本目前是通过根据<code>answers</code>，使用<code>Ejs</code>来渲染的。未来这一块可以优化为通过修改文件的<code>AST</code>，来实现配置的注入，对模板的侵入性会更低。</li>
+<li>后续需要在项目中加入<code>Jest</code>单元测试，保证脚手架后续迭代，对主流程功能不会造成影响。</li>
+</ul>
+<p>如果大家想了解项目细节，后续我可以再写一篇关于项目中细节的文章。</p>
+<h2 id="自制React集成脚手架-功能介绍"><a href="#自制React集成脚手架-功能介绍" class="headerlink" title="自制React集成脚手架 功能介绍"></a>自制React集成脚手架 功能介绍</h2><h3 id="npm地址"><a href="#npm地址" class="headerlink" title="npm地址"></a>npm地址</h3><p><a href="https://www.npmjs.com/package/create-compositive-react-app-cli">npm源地址</a></p>
+<h3 id="Introduction-脚手架介绍"><a href="#Introduction-脚手架介绍" class="headerlink" title="Introduction 脚手架介绍"></a>Introduction 脚手架介绍</h3><p>减少从0到1搭建项目的成本，快速开发项目<br>在<code>create-react-app</code> <code>v4.0.3</code>脚手架基础上，增加了如下项目配置可选项</p>
+<ul>
+<li><code>React-Redux + Redux-Thunk + Redux-Logger</code></li>
+<li><code>React-Router</code> (可选择<code>History</code>, <code>Hash</code>模式)</li>
+<li><code>Linter / Formatter</code> （目前提供了<code>Eslint + EditorConfig + Prettier + CommitLint</code>）</li>
+</ul>
+<p>完成模板创建后，自动安装依赖。</p>
+<h3 id="Getting-started-快速使用"><a href="#Getting-started-快速使用" class="headerlink" title="Getting started 快速使用"></a>Getting started 快速使用</h3><ul>
+<li>推荐使用 <code>npx create-compositive-react-app-cli init &lt;your project name&gt;</code></li>
+<li>也可使用 <code>npm i -g create-compositive-react-app-cli</code> <code>ccra init &lt;your project name&gt;</code></li>
+</ul>
+<h3 id="Usage-使用方法"><a href="#Usage-使用方法" class="headerlink" title="Usage 使用方法"></a>Usage 使用方法</h3><h5 id="快速搭建项目"><a href="#快速搭建项目" class="headerlink" title="快速搭建项目"></a>快速搭建项目</h5><p><code>ccra init &lt;name&gt;</code><br>配置项有3种可选项:</p>
+<ul>
+<li>Redux</li>
+<li>React-Router (可选择History, Hash模式)</li>
+<li>Linter / Formatter （目前提供了Eslint + EditorConfig + Prettier + CommitLint）</li>
+</ul>
+<h5 id="快速创建Page、Component模板"><a href="#快速创建Page、Component模板" class="headerlink" title="快速创建Page、Component模板"></a>快速创建Page、Component模板</h5><p><code>ccra create</code><br>可以在 <strong>CLI</strong> 中自行选择创建 <strong>Page</strong> 或 <strong>Component</strong> 输入 <strong>name</strong> 后即可完成模板自动创建</p>
+<h3 id="Features-功能介绍"><a href="#Features-功能介绍" class="headerlink" title="Features 功能介绍"></a>Features 功能介绍</h3><ul>
+<li>一键快速创建<code>Page</code>组件</li>
+<li>一键快速创建<code>Components</code>组件</li>
+<li>在<code>ccra init &lt;name&gt;</code>进行初始化项目时，通过<code>Inquirer</code>库的功能，提供给用户各类可选项，可以根据用户所需配置，进行项目自动化构建。<ul>
+<li>注：状态管理暂时仅提供<code>Redux</code>模板</li>
+<li>路由管理提供<code>React-Router</code> <code>v5</code>模板</li>
+</ul>
+</li>
+<li>自动安装所需要的<code>@types</code>文件，即便用户使用<code>JavaScript</code>进行开发，也能在<code>vscode IDE</code>下得到函数提示支持</li>
+</ul>
+]]></content>
+      <tags>
+        <tag>node.js</tag>
+        <tag>cli</tag>
+        <tag>react.js</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>送给自己2020年的流水账</title>
+    <url>/2021/01/17/%E9%80%81%E7%BB%99%E8%87%AA%E5%B7%B12020%E5%B9%B4%E7%9A%84%E6%B5%81%E6%B0%B4%E8%B4%A6/</url>
+    <content><![CDATA[<h2 id="Summary-For-2020"><a href="#Summary-For-2020" class="headerlink" title="Summary For 2020"></a>Summary For 2020</h2><blockquote>
+<p> 2021.1.17</p>
+<p>我一般很少写日记，不过回忆过去大学几年间的发生事情，的确很值得去记录一下。就像阮一峰的博客一样，Frank他会把一些都记录进去，分享给大家。即便博客没有人看，那也能证明这段记忆曾经存在过，能被互联网记录下去，git pages就是一个很好的平台，能够帮我们保存这些Best Moments。</p>
+</blockquote>
+<h3 id="让思绪回到大一-2016年"><a href="#让思绪回到大一-2016年" class="headerlink" title="让思绪回到大一 2016年"></a>让思绪回到大一 2016年</h3><blockquote>
+<p>还记得，大一的时候<br>那时候有一门课叫做大学生职业规划，当时，老师给大家丢出了一个问题，大家有没有思考过自己未来想要做什么专业？</p>
+</blockquote>
+<p>回想自己当时的当时自己也没有想过未来自己要做什么事情，只是听学长和老师们说，自动化专业的学生们，就业不需要发愁，这可是个万金油的专业，我内心暗喜，这就算是坐上了顺风车吧。</p>
+<h3 id="Back-to-2019"><a href="#Back-to-2019" class="headerlink" title="Back to 2019"></a>Back to 2019</h3><blockquote>
+<p>不平凡的2019年<br>19年一整年，老爸都病得很重，这是我第一次感觉到了生活上的压力</p>
+</blockquote>
+<p>进入2019年之后，大三下半学期开学后，真切感到身边的一切都发生了些许改变。</p>
+<h4 id="2019-3"><a href="#2019-3" class="headerlink" title="2019.3"></a>2019.3</h4><ul>
+<li>下课间隙，听到大家讨论证书，有些人说不需要考什么，如果要考的话，就考个电工证吧。有了电工证，就可以考国家电网，不过进去之后，前2年还要爬电线杆。</li>
+</ul>
+<p>这不是我想象的未来，有些迷茫，开始思考自己要做些什么。<br>看了看自己手上的证书，只有一个英语四级证书，倒是一次性过的。</p>
+<p>要不考一个计算机等级证书吧。<br>于是捡起来了大一学过的c语言，开始刷题，3月最后一天，去北科大参加了考试，考试的难度并不高，最后结果是顺顺利利通过了考试。</p>
+<p>走在北科的林荫大道，看着北科的学弟学妹们，感觉他们好幸福，这么年轻，还有校园生活。和自己的校园相比，还是很羡慕嫉妒恨的。</p>
+<p>嗯，要不要考研？明年的这个时候，自己就要离开校园了。打开电子成绩单，看了看，三年以来自己成绩单里最高的科目，喔，是高数。</p>
+<p>感觉大学的节奏有些太慢了，自己还要花2-3年在读研上吗，未免也太没意思了吧。</p>
+<blockquote>
+<p>虽然自己学了个自动化专业，但是大学三年以来对硬件方便实属没什么兴趣，感觉最有意思的课还是编程，写下的代码能实现好多有趣的东西，还是很有意思的。<br>况且自己从5岁开始就接触到电脑了，感觉还是互联网的世界适合自己。</p>
+</blockquote>
+<p>那么学什么呢，上网这么多年，觉得有的网站做的好漂亮，好想自己也做一个。最早以为这叫网页设计，百度了之后，才第一次知道，这叫前端，哈哈😂，有点意思。想到自己做的东西，能挂到网络上，被很多人看见，就有些兴奋呐。</p>
+<h4 id="2019-5"><a href="#2019-5" class="headerlink" title="2019.5"></a>2019.5</h4><p>忙完了课设，从5月开始，每天下课之后，吃完晚饭，去找个自习室学习前端，不得不说，现在回忆起来，这种，一个人自学前端从0到1的过程真的挺难的，没有人给你指引一条方向，不知道从何学起，但是想把自己的网页做出来，这就很有动力了。</p>
+<p>当时一开始还是在看菜鸟教程，但连菜鸟教程都看不懂，自己是真的是真菜鸟啊。</p>
+<p>大概到了7月中旬，放假的时候，终于把自己的第一个网站挂到服务器上，撸出来了！体验到了从0到1完整的过程，当时把网站挂到阿里云上之后，真的很有成就感，觉得自己忙了这么2个多月没有白费。</p>
+<p>同时六级分数也出来了，自己顺利的通过了六级。</p>
+<p><strong>记不起来我是怎么接触到了牛客网的了</strong></p>
+<blockquote>
+<p>之前这2个月学前端，感觉更是兴趣占了较大的分量。</p>
+</blockquote>
+<p>逛了逛牛客，我才看到，外面的世界。大家都怎么去学前端的，校招原来也招前端的呢。<br>啊，原来校招已经开始了呢。。。</p>
+<p>已经快8月了，提前批已经开始了，这时间的确有些紧张了.. 我才刚刚知道You don’t know javascript，了解到js的一些专有名词。</p>
+<h4 id="2019-9"><a href="#2019-9" class="headerlink" title="2019.9"></a>2019.9</h4><p>在家里学了1个多月，9月开始了，</p>
+<p>还记得，当时第一家面的就是小米，哈哈哈哈。面试结束之前，面试官还问我为什么想来小米，当然是因为自己是老米粉了啊，不过自己实在太菜了，给了一道原型链的题，居然都没有做出来😭。</p>
+<p>不过，可能是因为一直在牛客网转，给了我莫名的自信，一直在给大厂投简历，面大厂。还记得当时因为京东内推简历过不去，直接蹬车到北大，就为了当场投一份简历。</p>
+<p>为了能得到更多面试机会，我去了北航idg专场，不过因为自己计算机基础不好，选择题大多都答不上来，现场大约有300多个人，同时做题，我这算是第一次见识到了互联网竞争的激烈，原来有这么多同龄的大学生在为了这进入社会的第一份工作而努力着。</p>
+<p><strong>有三场印象比较深刻的面试</strong></p>
+<ul>
+<li><p>一个是当时去面美团，依稀还记得终面，部门老大扔了一道算法题过来，之前我对前端的认知是，前端和算法的距离很远。实际上这道题是一个归并排序，但是可能因为没有刷过题，一时很紧张，完全不知道怎么下手，2分钟后我就主动说，这道题我没有思路。老大很和蔼的说慢慢想不着急，但是我慌了，面试就这样结束了。反问了一下老大的感受，他觉得我不够自信，放弃的太快了。</p>
+</li>
+<li><p>第二个是去面旷视，感觉前几面聊的都很开心，四面来了个后端，扔给我一道hard，他也不懂前端。感觉到了世界的恶意啊。</p>
+</li>
+<li><p>第三个是去面搜狐，虽然搜狐它日薄西山了，但是还是有好多厉害的人。当时终面面试官真的很真诚，面试虽然最后没有过，最后提问环节，我说，想了解一下我这种应届生，应该怎么把前端学好。已经到了中午吃饭的时间，面试官也并没有快速敷衍我的问题，竟然给我讲了30分钟，告诉我怎么样才能把前端学好，要深挖原理，比如一个sass的背后，要知道实质是ast，总之我感觉听完大佬讲解，对前端有了更清晰的认知。</p>
+</li>
+</ul>
+<p>最后比较悲惨的是，还是一个大厂的面试也没有过，哈哈哈，最后签了一家互联网小公司。</p>
+<h3 id="2020-05"><a href="#2020-05" class="headerlink" title="2020.05"></a>2020.05</h3><p>时间来到2020年，20年初本来想去实习，疫情它来了。没想到寒假放假前的最后一天，竟是大学生活的最后一天。放假在家里，显然很无聊呐。追了追美剧，学了学英语。</p>
+<p>5月中的一天，下午看到qq的校招群被解散了，我就感觉到不对劲了，果然，过了一会，接到了一通电话，是来自去年校招签的公司的毁约通知电话。</p>
+<p>心有些累，为什么要在这个时间点毁约我们，看了看牛客，虽然大部分公司疫情来了过的很苦，但是起码不会毁应届生，这起码是最基本的底线吧，三方明明是国家用来保护学生的，确变成了保护企业的工具，多么可笑，要不是公司迫于压力，可能连一分钱都不会赔给我们，我们就像是弃子，毕业之后就将失业。因为疫情严重，春招我也没有再看其他公司的机会了，只是期盼着疫情减轻之后，学校能放我们出去，让我们早日入职，这突如其来的<strong>变化</strong>，让一切都有了变数。</p>
+<p>不过19年的秋招还是给我长了许多经验，虽然已经有一段时间没有接触前端，但是还是有底子在，于是立刻花了一周时间，温习了一遍前端知识，就去面试了。</p>
+<p>这次面的第一家公司就是小打卡，面试官问了一些es6的知识和为什么学前端，怎么学前端的，后来二面考了一道算法题，老板问我，有没有用过我们的产品，哈哈哈哈，想了想还是说了实话，并没有用过，甚至都没打开过（晚上hr约面试之后早起马上就过来了），面试就这样结束了。走之前，望了望各个会议室，都好热闹，的确可以看出来这家公司氛围很不错，虽然疫情很严重，但是大家的热情不减，或许这就是创业公司的激情吧。面试结束第二天早上，hr就打电话过来告知面试通过了，</p>
+<p>一开始学前端，并没有想到自己会去做小程序，6月上班的第一天，没想到单位竟为我配置了一台mac，之前一直都在用windows，甚至都不知道怎么关闭窗口，lol :)。</p>
+<p>还是非常感激现在的公司，感觉如果去了上一家公司，可能永远不会有机会接触到这些新颖的技术，或许还在跟可视化干，或许前端能带给我的快感就是，自己的付出能被用户所感知吧，和其它方向的相比，前端发展实在是太迅速了，技术日新月异，似乎你一段时间脱离这个圈子，就会被淘汰，我很喜欢这种感觉，技术只有快速迭代，才能证明它未来的发展势头好，就像之前几年，大家都还在用jQuery，现在就已经有新的技术能替代它了。</p>
+<p><strong>人生就是这样波澜曲折，你永远不知道下一秒会发生什么</strong></p>
+<p><strong>新的一年，还有很多很多有意思的事情等待我去探索！</strong></p>
+<p><strong>希望自己2021能变得成熟些，能够更有勇气去面对未知！</strong></p>
+]]></content>
+      <tags>
+        <tag>日记</tag>
+      </tags>
+  </entry>
+</search>
