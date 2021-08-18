@@ -620,10 +620,10 @@ changyan:
 # Valine
 # For more information: https://valine.js.org, https://github.com/xCss/Valine
 valine:
-  enable: false
-  appid: # Your leancloud application appid
-  appkey: # Your leancloud application appkey
-  notify: false # Mail notifier
+  enable: true
+  appid: jn3XQU9QNTKtuUNkTbc8vKyh-gzGzoHsz # Your leancloud application appid
+  appkey: Tu6tjPbEt2aHwvRMmftfoiy5 # Your leancloud application appkey
+  notify: true # Mail notifier
   verify: false # Verification code
   placeholder: Just go go # Comment box placeholder
   avatar: mm # Gravatar style
@@ -680,13 +680,13 @@ add_this_id:
 
 # Google Analytics
 google_analytics:
-  tracking_id: # <app_id>
+  tracking_id: G-J8WG15D8JV # <app_id>
   # By default, NexT will load an external gtag.js script on your site.
   # If you only need the pageview feature, set the following option to true to get a better performance.
   only_pageview: false
 
 # Baidu Analytics
-baidu_analytics: # <app_id>
+baidu_analytics: 91a1bec77f1fc855d541484eae05b91d # <app_id>
 
 # Growingio Analytics
 growingio_analytics: # <project_id>
