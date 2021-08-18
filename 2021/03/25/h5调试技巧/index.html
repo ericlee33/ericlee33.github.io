@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Times New Roman:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ericlee33.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":true,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="前述 本文仅介绍非抓包之外的其它调试技巧我们已经习惯了模拟器进行调试，那为什么还需要进行本地真机调试？举个例子：   ios真机环境，我们收到短信验证码后，点击复制，ios系统层面会存在bug，剪切下来的验证码会被重复两遍，例如收到的验证码为123456，但是实际复制后到剪切板的就变成了123456123456。  如果你对「各端h5的坑」了解不深。没有使用真机调试的方式，就无法在本地调试的阶段就">
+<meta property="og:type" content="article">
+<meta property="og:title" content="h5调试技巧">
+<meta property="og:url" content="https://ericlee33.github.io/2021/03/25/h5%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7/index.html">
+<meta property="og:site_name" content="Eric&#39;s Home">
+<meta property="og:description" content="前述 本文仅介绍非抓包之外的其它调试技巧我们已经习惯了模拟器进行调试，那为什么还需要进行本地真机调试？举个例子：   ios真机环境，我们收到短信验证码后，点击复制，ios系统层面会存在bug，剪切下来的验证码会被重复两遍，例如收到的验证码为123456，但是实际复制后到剪切板的就变成了123456123456。  如果你对「各端h5的坑」了解不深。没有使用真机调试的方式，就无法在本地调试的阶段就">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/033457f5d860488e93198d121bc7d7a4~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/11db1b77daf54635a9c13390054529ef~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/82607a4f98e84c9ea4819f2f02093ccd~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/eec016fce0394d509894a370253847a8~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4bf0c81808cd4a499ed25c65e5093c35~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/da3a50056ed54fcc809558ac474e1756~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cbeb31635ef0420293d963016e102646~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/27be3b0199814a0b9f476b9ff5e3b639~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="article:published_time" content="2021-03-25T11:22:42.000Z">
+<meta property="article:modified_time" content="2021-08-18T13:59:00.329Z">
+<meta property="article:author" content="Eric">
+<meta property="article:tag" content="h5">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/033457f5d860488e93198d121bc7d7a4~tplv-k3u1fbpfcp-zoom-1.image">
+
+<link rel="canonical" href="https://ericlee33.github.io/2021/03/25/h5%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>h5调试技巧 | Eric's Home</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J8WG15D8JV"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-J8WG15D8JV');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?91a1bec77f1fc855d541484eae05b91d";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <h1 class="site-title">Eric's Home</h1>
+    </a>
+      <p class="site-subtitle" itemprop="description">Be An Optimist</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+  <a href="https://github.com/ericlee33" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ericlee33.github.io/2021/03/25/h5%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Eric">
+      <meta itemprop="description" content="热爱前端，热爱分享">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Eric's Home">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          h5调试技巧
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-03-25 19:22:42" itemprop="dateCreated datePublished" datetime="2021-03-25T19:22:42+08:00">2021-03-25</time>
+            </span>
+
+          
+            <span id="/2021/03/25/h5%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7/" class="post-meta-item leancloud_visitors" data-flag-title="h5调试技巧" title="Views">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">Views: </span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+            <span class="post-meta-item" title="Views" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">Views: </span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine: </span>
+    
+    <a title="valine" href="/2021/03/25/h5%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/03/25/h5%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="Symbols count in article">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">Symbols count in article: </span>
+              <span>2.5k</span>
+            </span>
+            <span class="post-meta-item" title="Reading time">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">Reading time &asymp;</span>
+              <span>2 mins.</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="前述"><a href="#前述" class="headerlink" title="前述"></a>前述</h2><blockquote>
+<p>本文仅介绍非抓包之外的其它调试技巧<br>我们已经习惯了模拟器进行调试，那为什么还需要进行本地真机调试？<br>举个例子：</p>
+</blockquote>
+<ul>
+<li><code>ios</code>真机环境，我们收到短信验证码后，点击复制，<code>ios</code>系统层面会存在<code>bug</code>，剪切下来的验证码会被重复两遍，例如收到的验证码为<code>123456</code>，但是实际复制后到剪切板的就变成了<code>123456123456</code>。</li>
+</ul>
+<p>如果你对<code>「各端h5的坑」</code>了解不深。没有使用真机调试的方式，就无法在本地调试的阶段就发现潜在的问题。</p>
+<h2 id="利用Chrome进行真机调试"><a href="#利用Chrome进行真机调试" class="headerlink" title="利用Chrome进行真机调试"></a>利用Chrome进行真机调试</h2><blockquote>
+<p>为什么真机测试是必要的？</p>
+</blockquote>
+<h3 id="首先分享一个坑"><a href="#首先分享一个坑" class="headerlink" title="首先分享一个坑"></a>首先分享一个坑</h3><p>一开始，为了实现一屏完全填充，考虑到移动端对<code>vw</code>，<code>vh</code>完美支持的情况下，我使用如下代码对宽高进行控制</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">html</span>, <span class="selector-tag">body</span> &#123;</span><br><span class="line">  <span class="attribute">height</span>: <span class="number">100vh</span>;</span><br><span class="line">  <span class="attribute">width</span>: <span class="number">100vw</span>;</span><br><span class="line">  <span class="attribute">background-color</span>: blue;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>好的，让我们看看效果，在模拟器上，表现很完美，整整一屏的<code>blue</code>，这样看起来是没有问题的。<br><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/033457f5d860488e93198d121bc7d7a4~tplv-k3u1fbpfcp-zoom-1.image" width="40%" /></p>
+<h3 id="真机调试步骤"><a href="#真机调试步骤" class="headerlink" title="真机调试步骤"></a>真机调试步骤</h3><h4 id="准备项"><a href="#准备项" class="headerlink" title="准备项"></a>准备项</h4><ul>
+<li><p>首先确保你有一根双向<code>Type-c</code>的线（😭 我没有，就把<code>mac</code>充电器的线接到手机上了）</p>
+</li>
+<li><p>接下来，用线将手机和电脑连到一起</p>
+</li>
+<li><p>打开手机的<code>Chrome</code></p>
+</li>
+<li><p>在完成电脑与手机之后，在电脑<code>Chrome</code>中输入以下地址：</p>
+</li>
+<li><p><code>chrome://inspect/#devices</code></p>
+</li>
+</ul>
+<h4 id="如何判断链接成功？"><a href="#如何判断链接成功？" class="headerlink" title="如何判断链接成功？"></a>如何判断链接成功？</h4><p>如果你能看到<code>Chrome</code>识别出了你的移动设备，并且可以看到当前<code>Chrome</code>浏览历史页面列表，证明你链接成功了！</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/11db1b77daf54635a9c13390054529ef~tplv-k3u1fbpfcp-zoom-1.image" alt="image.png"></p>
+<h4 id="开始真机调试"><a href="#开始真机调试" class="headerlink" title="开始真机调试"></a>开始真机调试</h4><p>接下来，我们可以在 <strong><code>chrome://inspect/#devices</code> 页打开一个我们想要进行调试的页面</strong><br><strong>这里我们打开第一步：</strong><code>On Your Network</code>: <a target="_blank" rel="noopener" href="https://192.168.12.247:3000/">https://192.168.12.247:3000</a>的页面<br><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/82607a4f98e84c9ea4819f2f02093ccd~tplv-k3u1fbpfcp-zoom-1.image" alt="image.png"></p>
+<h4 id="回到一开始的问题，真机调试会有什么问题呢？"><a href="#回到一开始的问题，真机调试会有什么问题呢？" class="headerlink" title="回到一开始的问题，真机调试会有什么问题呢？"></a>回到一开始的问题，真机调试会有什么问题呢？</h4><p>可以看到，由于模拟器没有<code>address bar</code>，无法让我们发现问题，到了移动端之后，<code>100vh</code>实际会溢出，就出现滚动条了，并不是我们预期的效果。<br><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/eec016fce0394d509894a370253847a8~tplv-k3u1fbpfcp-zoom-1.image" alt="image.png"></p>
+<p>有一些人提出如下解决方案，但是在实践中发现，安卓真机打开键盘会导致<code>body</code>元素高度减少，收起键盘之后，<code>body</code>高度不会变回去，导致原键盘区域为空白。</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 存在问题的方案 */</span></span><br><span class="line"><span class="selector-tag">html</span>, <span class="selector-tag">body</span> &#123;</span><br><span class="line">  <span class="attribute">height</span>: -moz-available;</span><br><span class="line">  <span class="attribute">height</span>: fill-available;</span><br><span class="line">  <span class="attribute">height</span>: -webkit-fill-available; <span class="comment">/* 表示撑满可用空间（包括高度，宽度）*/</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>解决方法：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 最终方案 */</span></span><br><span class="line"><span class="selector-tag">html</span>, <span class="selector-tag">body</span> &#123;</span><br><span class="line">  <span class="attribute">min-height</span>: <span class="number">100%</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="使用vConsole插件"><a href="#使用vConsole插件" class="headerlink" title="使用vConsole插件"></a>使用vConsole插件</h2><blockquote>
+<p>进行小程序开发的各位应该对<code>vConsole</code>很熟悉了吧，但是我一开始也以为这个插件是小程序底层内置的，实际上在h5中我们也可以引入这个插件。</p>
+</blockquote>
+<hr>
+<h3 id="直接引入"><a href="#直接引入" class="headerlink" title="直接引入"></a>直接引入</h3><blockquote>
+<p><a target="_blank" rel="noopener" href="https://github.com/Tencent/vConsole">https://github.com/Tencent/vConsole</a></p>
+</blockquote>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// index.js</span></span><br><span class="line"><span class="keyword">import</span> vconsole <span class="keyword">from</span> <span class="string">&#x27;vconsole&#x27;</span> </span><br><span class="line"><span class="keyword">const</span> vConsole = <span class="keyword">new</span> VConsole();</span><br></pre></td></tr></table></figure>
+<h3 id="通过Webpack插件形式引入"><a href="#通过Webpack插件形式引入" class="headerlink" title="通过Webpack插件形式引入"></a>通过Webpack插件形式引入</h3><blockquote>
+<p><a target="_blank" rel="noopener" href="https://github.com/diamont1001/vconsole-webpack-plugin">https://github.com/diamont1001/vconsole-webpack-plugin</a></p>
+</blockquote>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//webpack.config.js</span></span><br><span class="line"><span class="comment">/** 以下为伪代码 */</span></span><br><span class="line"><span class="keyword">const</span> vConsolePlugin = <span class="built_in">require</span>(<span class="string">&#x27;vconsole-webpack-plugin&#x27;</span>);</span><br><span class="line"></span><br><span class="line">plugins: [</span><br><span class="line">  isEnvDevelopment &amp;&amp;</span><br><span class="line">    <span class="keyword">new</span> vConsolePlugin(&#123;</span><br><span class="line">      <span class="attr">filter</span>: [],</span><br><span class="line">      <span class="attr">enable</span>: isEnvDevelopment,</span><br><span class="line">   &#125;),</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+
+<h2 id="使用内网ip进行真机调试"><a href="#使用内网ip进行真机调试" class="headerlink" title="使用内网ip进行真机调试"></a>使用内网ip进行真机调试</h2><h3 id="如何获取本地ip？"><a href="#如何获取本地ip？" class="headerlink" title="如何获取本地ip？"></a>如何获取本地ip？</h3><p>如果你通过<code>npm run dev</code>启动本地<code>dev</code>环境，并且项目是基于<code>create-react-app</code>或<code>vue-cli</code>搭建项目的时候，由于封装的脚手架中配置了<code>webpack</code>相关的<code>plugin</code>，项目运行成功后会在命令行中有一些提示，不知你有没有注意过<code>terminal</code>提示里的第三行地址？</p>
+<p><strong><code>On Your Network: https://192.168.12.247:3000</code></strong></p>
+<img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4bf0c81808cd4a499ed25c65e5093c35~tplv-k3u1fbpfcp-zoom-1.image" width="50%" />
+
+<p>如果你的项目没有使用<code>webpack</code>，或没有配置相关<code>plugins</code>，看不到<code>**On Your Network</code>**也没有关系<br>可以通过如下方式获取内网<code>ip</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ifconfig | grep <span class="string">&quot;inet &quot;</span> | grep -v 127.0.0.1</span><br><span class="line"></span><br><span class="line"><span class="comment"># 执行结果</span></span><br><span class="line"><span class="comment"># inet 192.168.12.247 netmask 0xfffffc00 broadcast 192.168.15.255</span></span><br><span class="line"><span class="comment"># 这里 192.168.12.247 就是本机的内网ip</span></span><br></pre></td></tr></table></figure>
+
+<p>在真机<code>Chrome</code>中输入<code>https://192.168.12.247:3000</code>，可以看到手机后置摄像头的画面在页面中通过<code>video</code>成功渲染。<br>对于这种例如需要使用后置摄像头的业务场景，我们只能使用真机进行实时调试（谁让<code>Mbp</code>自身不带后置摄像头呢？😭 ）</p>
+<img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/da3a50056ed54fcc809558ac474e1756~tplv-k3u1fbpfcp-zoom-1.image" width="30%"/>
+
+
+
+<h3 id="在手机浏览器中手动输入地址，进行移动端调试很麻烦？"><a href="#在手机浏览器中手动输入地址，进行移动端调试很麻烦？" class="headerlink" title="在手机浏览器中手动输入地址，进行移动端调试很麻烦？"></a>在手机浏览器中手动输入地址，进行移动端调试很麻烦？</h3><p>这里提供一个<code>Chrome</code>插件，可以直接生成二维码<br><a target="_blank" rel="noopener" href="https://chrome.google.com/webstore/detail/qr-code-generator/afpbjjgbdimpioenaedcjgkaigggcdpp">https://chrome.google.com/webstore/detail/qr-code-generator/afpbjjgbdimpioenaedcjgkaigggcdpp</a>（需要科学上网）<br><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cbeb31635ef0420293d963016e102646~tplv-k3u1fbpfcp-zoom-1.image" alt="image.png"></p>
+<h3 id="FAQ"><a href="#FAQ" class="headerlink" title="FAQ"></a>FAQ</h3><h4 id="点击inspect后，弹出的Devtools工具白屏，提示http1-1-404"><a href="#点击inspect后，弹出的Devtools工具白屏，提示http1-1-404" class="headerlink" title="点击inspect后，弹出的Devtools工具白屏，提示http1.1 404"></a>点击inspect后，弹出的Devtools工具白屏，提示http1.1 404</h4><ul>
+<li>需要查看手机<code>Chrome</code>版本和电脑<code>Chrome</code>版本是否一致，需要对齐版本</li>
+</ul>
+<p>仍然无法打开<code>Devtools</code>则需要科学上学</p>
+<h4 id="访问内网http环境无法通过MediaDevices-getUserMedia获取视频，音频流"><a href="#访问内网http环境无法通过MediaDevices-getUserMedia获取视频，音频流" class="headerlink" title="访问内网http环境无法通过MediaDevices.getUserMedia获取视频，音频流"></a>访问内网http环境无法通过MediaDevices.getUserMedia获取视频，音频流</h4><blockquote>
+<p>由于<code>Chrome</code>的限制，只有<code>https</code>可以获取到流，<code>http</code>则无法获取</p>
+</blockquote>
+<p>可以通过<code>chrome://flags/</code>在白名单中设置<code>ip</code>来解决问题<br><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/27be3b0199814a0b9f476b9ff5e3b639~tplv-k3u1fbpfcp-zoom-1.image" alt="image.png"></p>
+<h2 id="谢谢大家❤️"><a href="#谢谢大家❤️" class="headerlink" title="谢谢大家❤️"></a>谢谢大家❤️</h2><p>我的分享到这里就结束了，如果还有什么疑问或者建议，欢迎一起交流讨论，可以添加我的微信<code>actuallys</code>，分享、点赞、在看三连～！</p>
+
+    </div>
+
+    
+    
+    
+        
+
+  <div class="followme">
+    <p>Welcome to my other publishing channels</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="https://github.com/ericlee33">
+            <span class="icon">
+              <i class="fa fa-github"></i>
+            </span>
+
+            <span class="label">github</span>
+          </a>
+        </div>
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/images/wechat_channel.jpeg">
+            <span class="icon">
+              <i class="fa fa-wechat"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/h5/" rel="tag"><i class="fa fa-tag"></i> h5</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/01/17/%E9%80%81%E7%BB%99%E8%87%AA%E5%B7%B12020%E5%B9%B4%E7%9A%84%E6%B5%81%E6%B0%B4%E8%B4%A6/" rel="prev" title="送给自己2020年的流水账">
+      <i class="fa fa-chevron-left"></i> 送给自己2020年的流水账
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/03/29/Formily%E6%9C%8D%E5%8A%A1%E7%AB%AF%E6%8E%A7%E5%88%B6%E8%87%AA%E5%AE%9A%E4%B9%89%E6%A0%A1%E9%AA%8Cx-rules%E8%A7%84%E5%88%99%E5%AE%9E%E8%B7%B5/" rel="next" title="Formily服务端控制自定义校验x-rules规则实践">
+      Formily服务端控制自定义校验x-rules规则实践 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">前述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%A9%E7%94%A8Chrome%E8%BF%9B%E8%A1%8C%E7%9C%9F%E6%9C%BA%E8%B0%83%E8%AF%95"><span class="nav-number">2.</span> <span class="nav-text">利用Chrome进行真机调试</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A6%96%E5%85%88%E5%88%86%E4%BA%AB%E4%B8%80%E4%B8%AA%E5%9D%91"><span class="nav-number">2.1.</span> <span class="nav-text">首先分享一个坑</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9C%9F%E6%9C%BA%E8%B0%83%E8%AF%95%E6%AD%A5%E9%AA%A4"><span class="nav-number">2.2.</span> <span class="nav-text">真机调试步骤</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%87%86%E5%A4%87%E9%A1%B9"><span class="nav-number">2.2.1.</span> <span class="nav-text">准备项</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%88%A4%E6%96%AD%E9%93%BE%E6%8E%A5%E6%88%90%E5%8A%9F%EF%BC%9F"><span class="nav-number">2.2.2.</span> <span class="nav-text">如何判断链接成功？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BC%80%E5%A7%8B%E7%9C%9F%E6%9C%BA%E8%B0%83%E8%AF%95"><span class="nav-number">2.2.3.</span> <span class="nav-text">开始真机调试</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9B%9E%E5%88%B0%E4%B8%80%E5%BC%80%E5%A7%8B%E7%9A%84%E9%97%AE%E9%A2%98%EF%BC%8C%E7%9C%9F%E6%9C%BA%E8%B0%83%E8%AF%95%E4%BC%9A%E6%9C%89%E4%BB%80%E4%B9%88%E9%97%AE%E9%A2%98%E5%91%A2%EF%BC%9F"><span class="nav-number">2.2.4.</span> <span class="nav-text">回到一开始的问题，真机调试会有什么问题呢？</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8vConsole%E6%8F%92%E4%BB%B6"><span class="nav-number">3.</span> <span class="nav-text">使用vConsole插件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9B%B4%E6%8E%A5%E5%BC%95%E5%85%A5"><span class="nav-number">3.1.</span> <span class="nav-text">直接引入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%9A%E8%BF%87Webpack%E6%8F%92%E4%BB%B6%E5%BD%A2%E5%BC%8F%E5%BC%95%E5%85%A5"><span class="nav-number">3.2.</span> <span class="nav-text">通过Webpack插件形式引入</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%86%85%E7%BD%91ip%E8%BF%9B%E8%A1%8C%E7%9C%9F%E6%9C%BA%E8%B0%83%E8%AF%95"><span class="nav-number">4.</span> <span class="nav-text">使用内网ip进行真机调试</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E8%8E%B7%E5%8F%96%E6%9C%AC%E5%9C%B0ip%EF%BC%9F"><span class="nav-number">4.1.</span> <span class="nav-text">如何获取本地ip？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9C%A8%E6%89%8B%E6%9C%BA%E6%B5%8F%E8%A7%88%E5%99%A8%E4%B8%AD%E6%89%8B%E5%8A%A8%E8%BE%93%E5%85%A5%E5%9C%B0%E5%9D%80%EF%BC%8C%E8%BF%9B%E8%A1%8C%E7%A7%BB%E5%8A%A8%E7%AB%AF%E8%B0%83%E8%AF%95%E5%BE%88%E9%BA%BB%E7%83%A6%EF%BC%9F"><span class="nav-number">4.2.</span> <span class="nav-text">在手机浏览器中手动输入地址，进行移动端调试很麻烦？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#FAQ"><span class="nav-number">4.3.</span> <span class="nav-text">FAQ</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%82%B9%E5%87%BBinspect%E5%90%8E%EF%BC%8C%E5%BC%B9%E5%87%BA%E7%9A%84Devtools%E5%B7%A5%E5%85%B7%E7%99%BD%E5%B1%8F%EF%BC%8C%E6%8F%90%E7%A4%BAhttp1-1-404"><span class="nav-number">4.3.1.</span> <span class="nav-text">点击inspect后，弹出的Devtools工具白屏，提示http1.1 404</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AE%BF%E9%97%AE%E5%86%85%E7%BD%91http%E7%8E%AF%E5%A2%83%E6%97%A0%E6%B3%95%E9%80%9A%E8%BF%87MediaDevices-getUserMedia%E8%8E%B7%E5%8F%96%E8%A7%86%E9%A2%91%EF%BC%8C%E9%9F%B3%E9%A2%91%E6%B5%81"><span class="nav-number">4.3.2.</span> <span class="nav-text">访问内网http环境无法通过MediaDevices.getUserMedia获取视频，音频流</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B0%A2%E8%B0%A2%E5%A4%A7%E5%AE%B6%E2%9D%A4%EF%B8%8F"><span class="nav-number">5.</span> <span class="nav-text">谢谢大家❤️</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Eric"
+      src="/uploads/avatar.png">
+  <p class="site-author-name" itemprop="name">Eric</p>
+  <div class="site-description" itemprop="description">热爱前端，热爱分享</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ericlee33" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ericlee33" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:ericfly33@gmail.com" title="E-Mail → mailto:ericfly33@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://stackoverflow.com/users/14472362/eric-lee" title="StackOverflow → https:&#x2F;&#x2F;stackoverflow.com&#x2F;users&#x2F;14472362&#x2F;eric-lee" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i></a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://github.com/ericlee33" title="https:&#x2F;&#x2F;github.com&#x2F;ericlee33" rel="noopener" target="_blank">Github</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Eric</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="Symbols count total">26k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="Reading time total">24 mins.</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="Total Visitors">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="Total Views">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/pangu@4/dist/browser/pangu.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'jn3XQU9QNTKtuUNkTbc8vKyh-gzGzoHsz',
+      appKey     : 'Tu6tjPbEt2aHwvRMmftfoiy5',
+      placeholder: "Hey~ Write your comments here",
+      avatar     : 'monsterid',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : true,
+      lang       : 'en' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : true,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

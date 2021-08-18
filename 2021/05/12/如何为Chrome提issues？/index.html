@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Times New Roman:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ericlee33.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":true,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="背景在H5上传文件业务开发过程中，上传功能需要让用户上传 图片&#x2F;pdf 文件，我们很容易想到，只需要改变input的accept属性就好了，我们使用的accept属性如下。 &lt;input accept&#x3D;&quot;image&#x2F;jpeg,image&#x2F;jpg,image&#x2F;png,application&#x2F;pdf&quot; type&#x3D;&quot;file&quot; &#x2F;&gt; 但是在安卓真机Ch">
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何为Chrome提issues？">
+<meta property="og:url" content="https://ericlee33.github.io/2021/05/12/%E5%A6%82%E4%BD%95%E4%B8%BAChrome%E6%8F%90issues%EF%BC%9F/index.html">
+<meta property="og:site_name" content="Eric&#39;s Home">
+<meta property="og:description" content="背景在H5上传文件业务开发过程中，上传功能需要让用户上传 图片&#x2F;pdf 文件，我们很容易想到，只需要改变input的accept属性就好了，我们使用的accept属性如下。 &lt;input accept&#x3D;&quot;image&#x2F;jpeg,image&#x2F;jpg,image&#x2F;png,application&#x2F;pdf&quot; type&#x3D;&quot;file&quot; &#x2F;&gt; 但是在安卓真机Ch">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4c6fd1c00f5245d8b88dd239bdcd3390~tplv-k3u1fbpfcp-watermark.image">
+<meta property="og:image" content="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/97d0e38dfe0b49649d6a18af44e0409a~tplv-k3u1fbpfcp-watermark.image">
+<meta property="og:image" content="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4810e733663846fcbba5643e422019ef~tplv-k3u1fbpfcp-watermark.image">
+<meta property="og:image" content="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/82c67571c8f34f059cf2fd28e10414f1~tplv-k3u1fbpfcp-watermark.image">
+<meta property="og:image" content="https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/e11f9836724e48ae9196244f4444041d~tplv-k3u1fbpfcp-watermark.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/30f8418d7bba473e974cffb8f283e333~tplv-k3u1fbpfcp-watermark.image">
+<meta property="og:image" content="https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/e9b0c022af0d48908de0b8abaa1fdcc9~tplv-k3u1fbpfcp-watermark.image">
+<meta property="og:image" content="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4c6fd1c00f5245d8b88dd239bdcd3390~tplv-k3u1fbpfcp-watermark.image">
+<meta property="og:image" content="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6f1ff58477d64e4898f057fd8421ccb6~tplv-k3u1fbpfcp-watermark.image">
+<meta property="article:published_time" content="2021-05-12T15:38:01.000Z">
+<meta property="article:modified_time" content="2021-08-18T13:59:00.330Z">
+<meta property="article:author" content="Eric">
+<meta property="article:tag" content="Eric，博客，生活，技术，代码">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4c6fd1c00f5245d8b88dd239bdcd3390~tplv-k3u1fbpfcp-watermark.image">
+
+<link rel="canonical" href="https://ericlee33.github.io/2021/05/12/%E5%A6%82%E4%BD%95%E4%B8%BAChrome%E6%8F%90issues%EF%BC%9F/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>如何为Chrome提issues？ | Eric's Home</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J8WG15D8JV"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-J8WG15D8JV');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?91a1bec77f1fc855d541484eae05b91d";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <h1 class="site-title">Eric's Home</h1>
+    </a>
+      <p class="site-subtitle" itemprop="description">Be An Optimist</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+  <a href="https://github.com/ericlee33" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ericlee33.github.io/2021/05/12/%E5%A6%82%E4%BD%95%E4%B8%BAChrome%E6%8F%90issues%EF%BC%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Eric">
+      <meta itemprop="description" content="热爱前端，热爱分享">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Eric's Home">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          如何为Chrome提issues？
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-05-12 23:38:01" itemprop="dateCreated datePublished" datetime="2021-05-12T23:38:01+08:00">2021-05-12</time>
+            </span>
+
+          
+            <span id="/2021/05/12/%E5%A6%82%E4%BD%95%E4%B8%BAChrome%E6%8F%90issues%EF%BC%9F/" class="post-meta-item leancloud_visitors" data-flag-title="如何为Chrome提issues？" title="Views">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">Views: </span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+            <span class="post-meta-item" title="Views" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">Views: </span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine: </span>
+    
+    <a title="valine" href="/2021/05/12/%E5%A6%82%E4%BD%95%E4%B8%BAChrome%E6%8F%90issues%EF%BC%9F/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/05/12/%E5%A6%82%E4%BD%95%E4%B8%BAChrome%E6%8F%90issues%EF%BC%9F/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="Symbols count in article">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">Symbols count in article: </span>
+              <span>1.5k</span>
+            </span>
+            <span class="post-meta-item" title="Reading time">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">Reading time &asymp;</span>
+              <span>1 mins.</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>在<code>H5</code>上传文件业务开发过程中，上传功能需要让用户上传 <code>图片/pdf</code> 文件，我们很容易想到，只需要改变<code>input</code>的<code>accept</code>属性就好了，我们使用的<code>accept</code>属性如下。</p>
+<p><code>&lt;input accept=&quot;image/jpeg,image/jpg,image/png,application/pdf&quot; type=&quot;file&quot; /&gt;</code></p>
+<p>但是在安卓真机<code>Chrome</code>上测试时，发生了一些问题。</p>
+<img src="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4c6fd1c00f5245d8b88dd239bdcd3390~tplv-k3u1fbpfcp-watermark.image" width="200" />
+
+<p>可以看到，我们点击<code>Choose File</code>之后，出现了2个不应该出现的按钮，<code>Camcorder</code> 和 <code>Recorder</code>。<br>通过排查，我判断是<code>Chrome</code>自身的问题，那么如何为<code>Chrome</code>提issues呢？</p>
+<h2 id="在哪里为Chrome提Issues？"><a href="#在哪里为Chrome提Issues？" class="headerlink" title="在哪里为Chrome提Issues？"></a>在哪里为Chrome提Issues？</h2><p><a target="_blank" rel="noopener" href="https://bugs.chromium.org/p/chromium/issues/list">https://bugs.chromium.org/p/chromium/issues/list</a></p>
+<p>可能这里有人会说，这不是<code>chromium</code>的bug区吗，并不是<code>Chrome</code>。</p>
+<p>这里简单科普一下：</p>
+<ul>
+<li><p><code>Chromium</code>是谷歌的一个开源项目，所有的开发者们都可以去共同改进它。</p>
+</li>
+<li><p><code>Chrome</code>不是开源项目，谷歌会把<code>Chromium</code>的东西更新到<code>Chrome</code>中。所以<code>Chromium</code>更像是体验版，而<code>Chrome</code>是正式版。</p>
+</li>
+</ul>
+<h2 id="提issues步骤"><a href="#提issues步骤" class="headerlink" title="提issues步骤"></a>提issues步骤</h2><h4 id="进入Issues页面"><a href="#进入Issues页面" class="headerlink" title="进入Issues页面"></a>进入Issues页面</h4><p>我们打开 <a target="_blank" rel="noopener" href="https://bugs.chromium.org/p/chromium/issues/list">https://bugs.chromium.org/p/chromium/issues/list</a> 页面<br><img src="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/97d0e38dfe0b49649d6a18af44e0409a~tplv-k3u1fbpfcp-watermark.image" alt="0.png"></p>
+<h4 id="填写机型环境信息"><a href="#填写机型环境信息" class="headerlink" title="填写机型环境信息"></a>填写机型环境信息</h4><p>这里<code>Chrome versions</code>，网站会自动帮我们进行识别。由于是在PC上填写，我们需要填写自己的移动设备系统与版本。</p>
+<div align="center">
+    <img src="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4810e733663846fcbba5643e422019ef~tplv-k3u1fbpfcp-watermark.image" width="500" />
+</div>
+
+<h4 id="选择issues类型"><a href="#选择issues类型" class="headerlink" title="选择issues类型"></a>选择issues类型</h4><p>由于我们是开发者，直接选择<code>Web developer</code></p>
+<p>上述问题属于浏览器<code>API</code>的问题，我们选择 <code>API</code></p>
+<div align="center">
+    <img src="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/82c67571c8f34f059cf2fd28e10414f1~tplv-k3u1fbpfcp-watermark.image" width="500" />
+</div>
+
+<h4 id="详细描述我们的问题"><a href="#详细描述我们的问题" class="headerlink" title="详细描述我们的问题"></a>详细描述我们的问题</h4><p>这里建议上传源代码，或者提供一个<code>codesandbox</code>。这里由于我的问题比较简单，我只上传了一个<code>html</code>页面。<br>为了让<code>Chrome</code>维护人员更好的复现bug，我上传了4张图片，也提供了在<code>firefox</code>的表现（在firefox上是正常的，没有bug）</p>
+<div align="center">
+    <img src="https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/e11f9836724e48ae9196244f4444041d~tplv-k3u1fbpfcp-watermark.image" width="500" />
+</div>
+
+<p>为<code>Chrome</code>提issues的讲解到这里就结束啦，</p>
+<p>以下为我提的issues链接，欢迎一起围观：</p>
+<p><a target="_blank" rel="noopener" href="https://bugs.chromium.org/p/chromium/issues/detail?id=120435">https://bugs.chromium.org/p/chromium/issues/detail?id=120435</a></p>
+<hr>
+<p>以下为问题详细描述</p>
+<h2 id="上文具体Case分析"><a href="#上文具体Case分析" class="headerlink" title="上文具体Case分析"></a>上文具体Case分析</h2><h3 id="关于h5上传popup出现录音、摄像按钮的bug。"><a href="#关于h5上传popup出现录音、摄像按钮的bug。" class="headerlink" title="关于h5上传popup出现录音、摄像按钮的bug。"></a>关于h5上传popup出现录音、摄像按钮的bug。</h3><p>以下是我们的最简复现页面：</p>
+<div align="center">
+    <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/30f8418d7bba473e974cffb8f283e333~tplv-k3u1fbpfcp-watermark.image" width="320" />
+</div>
+
+<p>点击第一行的<code>&lt;input id=&quot;1&quot; accept=&quot;image/jpeg,image/jpg,image/png&quot; type=&quot;file&quot; /&gt;</code>按钮</p>
+<p>可以看到<code>Chrome</code>的表现是正常的</p>
+<div align="center">
+    <img src="https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/e9b0c022af0d48908de0b8abaa1fdcc9~tplv-k3u1fbpfcp-watermark.image" width="320" />
+</div>
+
+<p>点击第二行的<code>&lt;input accept=&quot;image/jpeg,image/jpg,image/png,application/pdf&quot; type=&quot;file&quot; /&gt;</code>按钮</p>
+<p>可以看到弹出了4个按钮，但是多出了<code>Camcorder</code>和<code>Recoder</code>，这就不正常了，我们并没有在accept中声明要求用户上传这2种格式的文件</p>
+<div align="center">
+    <img src="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4c6fd1c00f5245d8b88dd239bdcd3390~tplv-k3u1fbpfcp-watermark.image" width="320" />
+</div>
+
+<p>那么在Firefox的表现呢？点击第二行的按钮，可以看到Everything is fine。。所以我们可以确定该bug为Chrome自身的问题。</p>
+<div align="center">
+    <img src="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6f1ff58477d64e4898f057fd8421ccb6~tplv-k3u1fbpfcp-watermark.image" width="320" />
+</div>
+
+<h3 id="如何自行兼容？"><a href="#如何自行兼容？" class="headerlink" title="如何自行兼容？"></a>如何自行兼容？</h3><p>在<code>input</code>的<code>onChange</code>回调中根据<code>files</code>进行自行判断，如果用户上传的类型不对，就舍弃掉该文件，给用户<code>tips</code>提示。</p>
+<hr>
+<p><strong>以下为我提的issues</strong></p>
+<p>欢迎大家一起围观：</p>
+<p><a target="_blank" rel="noopener" href="https://bugs.chromium.org/p/chromium/issues/detail?id=1204359">https://bugs.chromium.org/p/chromium/issues/detail?id=1204359</a></p>
+
+    </div>
+
+    
+    
+    
+        
+
+  <div class="followme">
+    <p>Welcome to my other publishing channels</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="https://github.com/ericlee33">
+            <span class="icon">
+              <i class="fa fa-github"></i>
+            </span>
+
+            <span class="label">github</span>
+          </a>
+        </div>
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/images/wechat_channel.jpeg">
+            <span class="icon">
+              <i class="fa fa-wechat"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/04/25/%E8%B6%85%E5%A5%BD%E7%94%A8%E7%9A%84React%E8%84%9A%E6%89%8B%E6%9E%B6%EF%BC%8C%E5%BF%AB%E6%9D%A5%E8%AF%95%E8%AF%95%E5%90%A7/" rel="prev" title="超好用的React脚手架，快来试试吧">
+      <i class="fa fa-chevron-left"></i> 超好用的React脚手架，快来试试吧
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/05/24/%E6%9C%89%E6%84%8F%E6%80%9D%E7%9A%84bug%EF%BC%88%E4%B8%80%EF%BC%89/" rel="next" title="有意思的bug（一）">
+      有意思的bug（一） <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8%E5%93%AA%E9%87%8C%E4%B8%BAChrome%E6%8F%90Issues%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">在哪里为Chrome提Issues？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8F%90issues%E6%AD%A5%E9%AA%A4"><span class="nav-number">3.</span> <span class="nav-text">提issues步骤</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%9B%E5%85%A5Issues%E9%A1%B5%E9%9D%A2"><span class="nav-number">3.0.1.</span> <span class="nav-text">进入Issues页面</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A1%AB%E5%86%99%E6%9C%BA%E5%9E%8B%E7%8E%AF%E5%A2%83%E4%BF%A1%E6%81%AF"><span class="nav-number">3.0.2.</span> <span class="nav-text">填写机型环境信息</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%80%89%E6%8B%A9issues%E7%B1%BB%E5%9E%8B"><span class="nav-number">3.0.3.</span> <span class="nav-text">选择issues类型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AF%A6%E7%BB%86%E6%8F%8F%E8%BF%B0%E6%88%91%E4%BB%AC%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">3.0.4.</span> <span class="nav-text">详细描述我们的问题</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8A%E6%96%87%E5%85%B7%E4%BD%93Case%E5%88%86%E6%9E%90"><span class="nav-number">4.</span> <span class="nav-text">上文具体Case分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E4%BA%8Eh5%E4%B8%8A%E4%BC%A0popup%E5%87%BA%E7%8E%B0%E5%BD%95%E9%9F%B3%E3%80%81%E6%91%84%E5%83%8F%E6%8C%89%E9%92%AE%E7%9A%84bug%E3%80%82"><span class="nav-number">4.1.</span> <span class="nav-text">关于h5上传popup出现录音、摄像按钮的bug。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E8%87%AA%E8%A1%8C%E5%85%BC%E5%AE%B9%EF%BC%9F"><span class="nav-number">4.2.</span> <span class="nav-text">如何自行兼容？</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Eric"
+      src="/uploads/avatar.png">
+  <p class="site-author-name" itemprop="name">Eric</p>
+  <div class="site-description" itemprop="description">热爱前端，热爱分享</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ericlee33" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ericlee33" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:ericfly33@gmail.com" title="E-Mail → mailto:ericfly33@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://stackoverflow.com/users/14472362/eric-lee" title="StackOverflow → https:&#x2F;&#x2F;stackoverflow.com&#x2F;users&#x2F;14472362&#x2F;eric-lee" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i></a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://github.com/ericlee33" title="https:&#x2F;&#x2F;github.com&#x2F;ericlee33" rel="noopener" target="_blank">Github</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Eric</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="Symbols count total">26k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="Reading time total">24 mins.</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="Total Visitors">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="Total Views">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/pangu@4/dist/browser/pangu.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'jn3XQU9QNTKtuUNkTbc8vKyh-gzGzoHsz',
+      appKey     : 'Tu6tjPbEt2aHwvRMmftfoiy5',
+      placeholder: "Hey~ Write your comments here",
+      avatar     : 'monsterid',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : true,
+      lang       : 'en' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : true,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

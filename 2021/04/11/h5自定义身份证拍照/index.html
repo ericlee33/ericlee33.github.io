@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Times New Roman:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ericlee33.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":true,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="demo源码：https:&#x2F;&#x2F;github.com&#x2F;ericlee33&#x2F;h5-id-card ，如果觉得有帮助的话，欢迎点个star👏  背景由于h5通过 &lt;input type&#x3D;&quot;file &#x2F;&gt; 方式吊起拍照的为系统相机，给用户的体验并不是很好，没有裁切框，也无法在系统相机上附加 tips 蒙层进行扩展，比如在蒙层上告知用户拍照的注意事项。所以业务上需要实现一个自定义拍">
+<meta property="og:type" content="article">
+<meta property="og:title" content="H5实现自定义身份证拍照">
+<meta property="og:url" content="https://ericlee33.github.io/2021/04/11/h5%E8%87%AA%E5%AE%9A%E4%B9%89%E8%BA%AB%E4%BB%BD%E8%AF%81%E6%8B%8D%E7%85%A7/index.html">
+<meta property="og:site_name" content="Eric&#39;s Home">
+<meta property="og:description" content="demo源码：https:&#x2F;&#x2F;github.com&#x2F;ericlee33&#x2F;h5-id-card ，如果觉得有帮助的话，欢迎点个star👏  背景由于h5通过 &lt;input type&#x3D;&quot;file &#x2F;&gt; 方式吊起拍照的为系统相机，给用户的体验并不是很好，没有裁切框，也无法在系统相机上附加 tips 蒙层进行扩展，比如在蒙层上告知用户拍照的注意事项。所以业务上需要实现一个自定义拍">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/708978852bda482590512e26b3c761ad~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0d4f04c1b98a4d0594fa9ceace06ec7a~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4e4c33994f0e4c23a21265b91f43dc7a~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7f3b8bfd242a470ebc26f6336b9177fa~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="article:published_time" content="2021-04-11T09:43:52.000Z">
+<meta property="article:modified_time" content="2021-08-18T13:59:00.329Z">
+<meta property="article:author" content="Eric">
+<meta property="article:tag" content="h5">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/708978852bda482590512e26b3c761ad~tplv-k3u1fbpfcp-zoom-1.image">
+
+<link rel="canonical" href="https://ericlee33.github.io/2021/04/11/h5%E8%87%AA%E5%AE%9A%E4%B9%89%E8%BA%AB%E4%BB%BD%E8%AF%81%E6%8B%8D%E7%85%A7/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>H5实现自定义身份证拍照 | Eric's Home</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J8WG15D8JV"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-J8WG15D8JV');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?91a1bec77f1fc855d541484eae05b91d";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <h1 class="site-title">Eric's Home</h1>
+    </a>
+      <p class="site-subtitle" itemprop="description">Be An Optimist</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+  <a href="https://github.com/ericlee33" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ericlee33.github.io/2021/04/11/h5%E8%87%AA%E5%AE%9A%E4%B9%89%E8%BA%AB%E4%BB%BD%E8%AF%81%E6%8B%8D%E7%85%A7/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Eric">
+      <meta itemprop="description" content="热爱前端，热爱分享">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Eric's Home">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          H5实现自定义身份证拍照
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-04-11 17:43:52" itemprop="dateCreated datePublished" datetime="2021-04-11T17:43:52+08:00">2021-04-11</time>
+            </span>
+
+          
+            <span id="/2021/04/11/h5%E8%87%AA%E5%AE%9A%E4%B9%89%E8%BA%AB%E4%BB%BD%E8%AF%81%E6%8B%8D%E7%85%A7/" class="post-meta-item leancloud_visitors" data-flag-title="H5实现自定义身份证拍照" title="Views">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">Views: </span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+            <span class="post-meta-item" title="Views" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">Views: </span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine: </span>
+    
+    <a title="valine" href="/2021/04/11/h5%E8%87%AA%E5%AE%9A%E4%B9%89%E8%BA%AB%E4%BB%BD%E8%AF%81%E6%8B%8D%E7%85%A7/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/04/11/h5%E8%87%AA%E5%AE%9A%E4%B9%89%E8%BA%AB%E4%BB%BD%E8%AF%81%E6%8B%8D%E7%85%A7/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="Symbols count in article">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">Symbols count in article: </span>
+              <span>6.8k</span>
+            </span>
+            <span class="post-meta-item" title="Reading time">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">Reading time &asymp;</span>
+              <span>6 mins.</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>demo源码：<a target="_blank" rel="noopener" href="https://github.com/ericlee33/h5-id-card">https://github.com/ericlee33/h5-id-card</a> ，如果觉得有帮助的话，欢迎点个star👏</p>
+</blockquote>
+<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>由于h5通过 <code>&lt;input type=&quot;file /&gt;</code> 方式吊起拍照的为系统相机，给用户的体验并不是很好，没有裁切框，也无法在系统相机上附加 <code>tips</code> 蒙层进行扩展，比如在蒙层上告知用户拍照的注意事项。所以业务上需要实现一个自定义拍照身份证的页面。</p>
+<h2 id="前期准备工作"><a href="#前期准备工作" class="headerlink" title="前期准备工作"></a>前期准备工作</h2><h3 id="各端兼容性现状"><a href="#各端兼容性现状" class="headerlink" title="各端兼容性现状"></a>各端兼容性现状</h3><p><strong>结论：</strong><br><strong>安卓：chrome53版本之后支持该api。</strong><br><strong>ios：仅safari11+支持。ios微信内置浏览器、Chrome、Edge等其它浏览器均不支持。</strong></p>
+<h3 id="考虑替代方案"><a href="#考虑替代方案" class="headerlink" title="考虑替代方案"></a>考虑替代方案</h3><p><strong>以下情况，均需要考虑替代方案：</strong><br><strong><strong>第一类：当满足下列条件，均需要采用系统相机拍照方案</strong></strong><br>1.用户不提供摄像头权限。<br>2.命中以下其中任意一条错误</p>
+<ul>
+<li><code>AbortError</code>［中止错误］</li>
+<li><code>NotAllowedError</code>［拒绝错误］</li>
+<li><code>NotFoundError</code>［找不到错误］</li>
+<li><code>NotReadableError</code>［无法读取错误］</li>
+<li><code>OverConstrainedError</code>［无法满足要求错误］</li>
+<li><code>SecurityError</code>［安全错误］</li>
+<li><code>TypeError</code>［类型错误］</li>
+</ul>
+<p>3.用户浏览器不支持该api</p>
+<p><strong>第二类：当ios用户使用非safari浏览器访问h5页面时</strong><br>由于ios只有safari11+可以吊起后置摄像头视频流，如果ios用户在非safari浏览器打开h5登陆页，都要直接引导用户复制链接到safari浏览器打开，避免接下来无法进行自定义拍照。这里牛客做的就比较好，可以仿照牛客做一个引导按钮。</p>
+<p align="center">
+    <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/708978852bda482590512e26b3c761ad~tplv-k3u1fbpfcp-zoom-1.image" width="40%">
+</p>
+
+<h2 id="正片开始"><a href="#正片开始" class="headerlink" title="正片开始"></a>正片开始</h2><blockquote>
+<p><strong>本文不涉及替代方案的兼容逻辑，可以自行在 <code>Promise.reject()</code> 时进行对应处理。</strong></p>
+</blockquote>
+<p>我们的主角是 <code>MediaDevices.getUserMedia()</code> ， <code>MDN</code> 对该api的介绍如下</p>
+<blockquote>
+<p><code>MediaDevices.getUserMedia()</code> 会提示用户给予使用媒体输入的许可，媒体输入会产生一个<a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/API/MediaStream"><code>MediaStream</code></a>，里面包含了请求的媒体类型的轨道。此流可以包含一个视频轨道（来自硬件或者虚拟视频源，比如相机、视频采集设备和屏幕共享服务等等）、一个音频轨道（同样来自硬件或虚拟音频源，比如麦克风、A/D转换器等等），也可能是其它轨道类型。</p>
+</blockquote>
+<h3 id="能力检测"><a href="#能力检测" class="headerlink" title="能力检测"></a>能力检测</h3><hr>
+<p>由于不同浏览器对于标准的实现不一致，需要作api能力的兼容，避免用户浏览器无法正常调用该api。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//访问用户媒体设备的兼容方法</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">getUserMedia</span>(<span class="params">constrains</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (navigator.mediaDevices?.getUserMedia) &#123;</span><br><span class="line">        <span class="comment">//最新标准API</span></span><br><span class="line">        <span class="keyword">return</span> navigator.mediaDevices.getUserMedia(constrains);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (navigator.webkitGetUserMedia) &#123;</span><br><span class="line">        <span class="comment">//webkit内核浏览器</span></span><br><span class="line">        <span class="keyword">return</span> navigator.webkitGetUserMedia(constrains);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (navigator.mozGetUserMedia) &#123;</span><br><span class="line">        <span class="comment">//Firefox浏览器</span></span><br><span class="line">        <span class="keyword">return</span> navigator.mozGetUserMedia(constrains);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (navigator.getUserMedia) &#123;</span><br><span class="line">        <span class="comment">//旧版API</span></span><br><span class="line">        <span class="keyword">return</span> navigator.getUserMedia(constrains);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="在页面上放置一个video元素"><a href="#在页面上放置一个video元素" class="headerlink" title="在页面上放置一个video元素"></a>在页面上放置一个video元素</h3><hr>
+<figure class="highlight jsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&lt;video</span><br><span class="line">   id=<span class="string">&quot;video&quot;</span></span><br><span class="line">   autoPlay</span><br><span class="line">   muted</span><br><span class="line">   playsInline</span><br><span class="line">   style=&#123;&#123;</span><br><span class="line">    <span class="attr">width</span>: <span class="string">&#x27;100%&#x27;</span>,</span><br><span class="line">  &#125;&#125;</span><br><span class="line">&gt;&lt;/video&gt;</span><br></pre></td></tr></table></figure>
+<p>有几个注意点⚠️</p>
+<blockquote>
+<p>iOS 10 Safari 允许自动播放以下两种视频：</p>
+<ul>
+<li>无音轨视频；</li>
+<li>无声音视频（设置了 <code>muted</code> 属性）；</li>
+</ul>
+</blockquote>
+<p>对于这两种类型的视频，可以通过 <code>&lt;video autoplay&gt;</code> 或 <code>video.play()</code> 两种方式来自动播放，无需用户主动操作。但是，如果它们在播放时变得有声音（获取了音轨，或者 <code>muted</code> 属性被取消），Safari 会暂停播放。</p>
+<ul>
+<li>只有提供 <code>muted</code> 属性，让视频静音，才可以通过 <code>&lt;video autoplay&gt;</code> 或 <code>video.play()</code> 两种方式来进行播放</li>
+<li>必须提供 <code>playsInline</code> 属性，不然在ios上会只播放一帧</li>
+</ul>
+<h3 id="调用封装好的getUserMedia，获取用户媒体流"><a href="#调用封装好的getUserMedia，获取用户媒体流" class="headerlink" title="调用封装好的getUserMedia，获取用户媒体流"></a>调用封装好的<strong>getUserMedia，获取用户媒体流</strong></h3><hr>
+<p>调用时，我们可以给<code>constrains</code> 对象可以多种不同的值，来获取用户设备底层各种不同的媒体流。</p>
+<ul>
+<li><code>video: true</code> <strong>（默认调取前置摄像头）</strong></li>
+<li>为了调取后置摄像头，需要通过 <code>facingMode: &#123; exact: &#39;environment&#39; &#125;</code> 来进行调用**（如果后置摄像头不存在，则会导致获取媒体流失败</li>
+<li>为了获取特定分辨率的视频流，我们可以指定相应的 <code>width</code> <code>height</code><strong>（但这种方式有缺陷，一旦用户设备不存在对于像素流，则会导致获取媒体流失败，所以，我们不对像素进行定制，使用自动获取到的媒体流像素）</strong><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 该函数需要接受一个video的dom节点作为参数</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">getUserMediaStream</span>(<span class="params">videoNode</span>) </span>&#123;</span><br><span class="line">  	<span class="comment">/** </span></span><br><span class="line"><span class="comment">     * 调用api成功的回调函数</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">success</span>(<span class="params">stream, video</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function">(<span class="params">resolve, reject</span>) =&gt;</span> &#123;</span><br><span class="line">            video.srcObject = stream;</span><br><span class="line"></span><br><span class="line">            video.onloadedmetadata = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">                video.play();</span><br><span class="line">                resolve();</span><br><span class="line">            &#125;;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">  </span><br><span class="line">    <span class="comment">//调用用户媒体设备，访问摄像头</span></span><br><span class="line">    <span class="keyword">return</span> getUserMedia(&#123;</span><br><span class="line">        <span class="attr">audio</span>: <span class="literal">false</span>,</span><br><span class="line">        <span class="attr">video</span>: &#123; <span class="attr">facingMode</span>: &#123; <span class="attr">exact</span>: <span class="string">&#x27;environment&#x27;</span> &#125; &#125;,</span><br><span class="line">        <span class="comment">// video: true,</span></span><br><span class="line">        <span class="comment">// video: &#123; facingMode: &#123; exact: &#x27;environment&#x27;, width: 1280, height: 720 &#125; &#125;,</span></span><br><span class="line">    &#125;)</span><br><span class="line">        .then(<span class="function"><span class="params">res</span> =&gt;</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> success(res, videoNode);</span><br><span class="line">        &#125;)</span><br><span class="line">        .catch(<span class="function"><span class="params">error</span> =&gt;</span> &#123;</span><br><span class="line">            <span class="built_in">console</span>.log(<span class="string">&#x27;访问用户媒体设备失败：&#x27;</span>, error.name, error.message);</span><br><span class="line">            <span class="keyword">return</span> <span class="built_in">Promise</span>.reject();</span><br><span class="line">        &#125;);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></li>
+</ul>
+<p><strong>当前效果：</strong></p>
+<p align="center">
+    <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0d4f04c1b98a4d0594fa9ceace06ec7a~tplv-k3u1fbpfcp-zoom-1.image" width="40%" />
+</p>
+
+<h3 id="增加裁切框和外部阴影"><a href="#增加裁切框和外部阴影" class="headerlink" title="增加裁切框和外部阴影"></a>增加裁切框和外部阴影</h3><hr>
+<ul>
+<li>裁切框我们根据需求写到页面中，之后会通过  <code>getBoundingClientRect</code> 获取裁切框的位置进行裁切。</li>
+<li>外部阴影使用 <code>box-shadow</code> 即可<figure class="highlight jsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;div className=&#123;styles[<span class="string">&#x27;shadow-layer&#x27;</span>]&#125; style=&#123;&#123; <span class="attr">height</span>: <span class="string">`<span class="subst">$&#123;videoHeight&#125;</span>px`</span> &#125;&#125;&gt;</span><br><span class="line">  <span class="xml"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;capture-rectangle&quot;</span> <span class="attr">className</span>=<span class="string">&#123;styles[</span>&#x27;<span class="attr">capture-rectangle</span>&#x27;]&#125;&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line">&lt;/div&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">@function</span> remB($px) &#123;</span><br><span class="line">    <span class="keyword">@return</span> ($px/<span class="number">75</span>) * <span class="number">1rem</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.shadow-layer</span> &#123;</span><br><span class="line">  <span class="attribute">position</span>: absolute;</span><br><span class="line">  <span class="attribute">top</span>: <span class="number">0</span>;</span><br><span class="line">  <span class="attribute">left</span>: <span class="number">0</span>;</span><br><span class="line">  <span class="attribute">width</span>: <span class="number">100%</span>;</span><br><span class="line">  <span class="attribute">z-index</span>: <span class="number">1</span>;</span><br><span class="line">  <span class="attribute">overflow</span>: hidden;</span><br><span class="line"></span><br><span class="line">  <span class="selector-class">.capture-rectangle</span> &#123;</span><br><span class="line">    <span class="attribute">margin</span>: <span class="built_in">remB</span>(<span class="number">200</span>) auto <span class="number">0</span>;</span><br><span class="line">    <span class="attribute">width</span>: <span class="built_in">remB</span>(<span class="number">700</span>);  // 这里写上我们需要裁切的宽</span><br><span class="line">    <span class="attribute">height</span>: <span class="built_in">remB</span>(<span class="number">450</span>); // 这里写上我们需要裁切的高</span><br><span class="line">    <span class="attribute">border</span>: <span class="number">1px</span> solid <span class="number">#fff</span>;</span><br><span class="line">    <span class="attribute">border-radius</span>: <span class="built_in">remB</span>(<span class="number">20</span>);</span><br><span class="line">    <span class="attribute">z-index</span>: <span class="number">2</span>;</span><br><span class="line">    <span class="attribute">box-shadow</span>: <span class="number">0</span> <span class="number">0</span> <span class="number">0</span> <span class="built_in">remB</span>(<span class="number">1000</span>) <span class="built_in">rgba</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0.7</span>); // 外层阴影</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p><strong>当前效果：</strong></p>
+<p align="center">
+    <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4e4c33994f0e4c23a21265b91f43dc7a~tplv-k3u1fbpfcp-zoom-1.image" width="40%" />
+</p>
+
+<h3 id="完成实时照片裁切，上传服务端进行OCR识别"><a href="#完成实时照片裁切，上传服务端进行OCR识别" class="headerlink" title="完成实时照片裁切，上传服务端进行OCR识别"></a>完成实时照片裁切，上传服务端进行OCR识别</h3><hr>
+<p>裁切用到的是 <code>canvas.getContext(&#39;2d).drawImage</code> 的能力。<br><code>void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);</code></p>
+<blockquote>
+<p><strong>MDN对该属性说明：</strong><br><code>image</code>绘制到上下文的元素。允许任何的 canvas 图像源(<a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/API/CanvasImageSource"><code>CanvasImageSource</code></a>)，例如：<a target="_blank" rel="noopener" href="https://developer.mozilla.org/en-US/docs/Web/API/CSSImageValue"><code>CSSImageValue</code> (en-US)</a>，<a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/API/HTMLImageElement"><code>HTMLImageElement</code></a>，<a target="_blank" rel="noopener" href="https://developer.mozilla.org/en-US/docs/Web/API/SVGImageElement"><code>SVGImageElement</code> (en-US)</a>，<a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/API/HTMLVideoElement"><code>HTMLVideoElement</code></a>，<a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/API/HTMLCanvasElement"><code>HTMLCanvasElement</code></a>，<a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/API/ImageBitmap"><code>ImageBitmap</code></a> 或者<a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/API/OffscreenCanvas"><code>OffscreenCanvas</code></a>。<br><a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/API/CanvasRenderingContext2D/drawImage">https://developer.mozilla.org/zh-CN/docs/Web/API/CanvasRenderingContext2D/drawImage</a></p>
+</blockquote>
+<p>可以我们传入 <code>video</code> 作为 <code>source</code> 进行裁切。<br><strong>这里要注意</strong></p>
+<ul>
+<li><code>sx</code> 和 <code>sy</code> 对应的是距离真实 <code>video</code> 元素的 <code>top</code> <code>left</code> 距离，不是页面中 <code>video</code> 的大小，拿到裁切框位置大小之后，需要做转换，再进行裁切，否则裁切位置会对不上。<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 获取video中对应的真实size</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">getXYRatio</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="comment">// videoHeight为video 真实高度</span></span><br><span class="line">  <span class="comment">// offsetHeight为video css高度</span></span><br><span class="line">  <span class="keyword">const</span> &#123; <span class="attr">videoHeight</span>: vh, <span class="attr">videoWidth</span>: vw, <span class="attr">offsetHeight</span>: oh, <span class="attr">offsetWidth</span>: ow &#125; = video;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> &#123;</span><br><span class="line">    <span class="attr">yRatio</span>: <span class="function"><span class="params">height</span> =&gt;</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> (vh / oh) * height;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">xRatio</span>: <span class="function"><span class="params">width</span> =&gt;</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> (vw / ow) * width;</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+</li>
+</ul>
+<p>在调用 <code>getUserMediaStream</code> 成功之后，我们开始捕捉视频流，每隔几秒进行截图，发送到服务器。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** 裁切上传相关核心代码  */</span></span><br><span class="line"><span class="keyword">const</span> Photo = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">		<span class="keyword">const</span> [videoHeight, setVideoHeight] = useState(<span class="number">0</span>);</span><br><span class="line">    <span class="keyword">const</span> ref = useRef(<span class="literal">null</span>);</span><br><span class="line"></span><br><span class="line">    useEffect(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> video = <span class="built_in">document</span>.getElementById(<span class="string">&#x27;video&#x27;</span>);</span><br><span class="line">        <span class="keyword">const</span> rectangle = <span class="built_in">document</span>.getElementById(<span class="string">&#x27;capture-rectangle&#x27;</span>);</span><br><span class="line">        <span class="keyword">const</span> _canvas = <span class="built_in">document</span>.createElement(<span class="string">&#x27;canvas&#x27;</span>);</span><br><span class="line">        _canvas.style.display = <span class="string">&#x27;block&#x27;</span>;</span><br><span class="line"></span><br><span class="line">        getUserMediaStream(video)</span><br><span class="line">            .then(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">                setVideoHeight(video.offsetHeight);</span><br><span class="line">                startCapture();</span><br><span class="line">            &#125;)</span><br><span class="line">            .catch(<span class="function"><span class="params">err</span> =&gt;</span> &#123;</span><br><span class="line">                showFail(&#123;</span><br><span class="line">                  <span class="attr">text</span>: <span class="string">&#x27;无法调起后置摄像头，请点击相册，手动上传身份证&#x27;</span>,</span><br><span class="line">                  <span class="attr">duration</span>: <span class="number">6</span>,</span><br><span class="line">                &#125;);</span><br><span class="line">            &#125;);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">function</span> <span class="title">startCapture</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">          ref.current = <span class="built_in">setInterval</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">            <span class="keyword">const</span> &#123; yRatio, xRatio &#125; = getXYRatio();</span><br><span class="line">            <span class="comment">/** 获取裁切框的位置 */</span></span><br><span class="line">            <span class="keyword">const</span> &#123; left, top, width, height &#125; = rectangle.getBoundingClientRect();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">const</span> context = _canvas.getContext(<span class="string">&#x27;2d&#x27;</span>);</span><br><span class="line">            _canvas.width = width;</span><br><span class="line">            _canvas.height = height;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);</span></span><br><span class="line">            context.drawImage(</span><br><span class="line">              video,</span><br><span class="line">              xRatio(left + <span class="built_in">window</span>.scrollX),</span><br><span class="line">              yRatio(top + <span class="built_in">window</span>.scrollY),</span><br><span class="line">              xRatio(width),</span><br><span class="line">              yRatio(height),</span><br><span class="line">              <span class="number">0</span>,</span><br><span class="line">              <span class="number">0</span>,</span><br><span class="line">              width,</span><br><span class="line">              height,</span><br><span class="line">            );</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 获取当前截图的base64编码</span></span><br><span class="line">            <span class="keyword">const</span> base64 = _canvas.toDataURL(<span class="string">&#x27;image/jpeg&#x27;</span>);</span><br><span class="line">            <span class="comment">// 这里可以再根据场景做base64压缩</span></span><br><span class="line">            <span class="comment">// 每2秒调用OCR接口，上传base64到服务端进行识别</span></span><br><span class="line">          &#125;, <span class="number">2000</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/** 清空定时器 */</span></span><br><span class="line">        <span class="keyword">return</span> <span class="function">() =&gt;</span> <span class="built_in">clearInterval</span>(ref.current);</span><br><span class="line">    &#125;, []);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p><strong>注意：</strong><br><code>sx</code> 、 <code>sy</code> 的值是相对根元素的，通过 <code>getBoundingClientRect</code> 拿到的 <code>top</code> 和 <code>left</code> 是相当于视口的，需要加上 <code>scroll</code> 的值。</p>
+<h2 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h2><p>实际上 <code>getUserMedia</code>  在安卓和 <code>MacOs</code> 上跑起来几乎没有问题，但是社区中对于该 <code>api</code> 的讨论太少了，可能大部分人甚至不知道这个 <code>api</code> 的存在，在 <code>ios</code> 真机上进行调试时，一开始只展示有一帧，便静止了，报错不会给予开发者比较详细的提示，我一开始大部分时间都花在了研究 <code>ios</code> 端为什么无法正常调用该 <code>api</code> 。不过这种业务场景在 <code>app</code> 上应该是比较常见的，本文仅为h5该业务场景的实现方式。</p>
+<p><strong>附一张最终效果图：</strong></p>
+<p align="center">
+    <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7f3b8bfd242a470ebc26f6336b9177fa~tplv-k3u1fbpfcp-zoom-1.image" width="40%" />
+</p>
+
+
+<h2 id="References"><a href="#References" class="headerlink" title="References"></a>References</h2><p>1.iOS13 getUserMedia not working on chrome and edge<br><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/63084076/ios13-getusermedia-not-working-on-chrome-and-edge">https://stackoverflow.com/questions/63084076/ios13-getusermedia-not-working-on-chrome-and-edge</a><br><a target="_blank" rel="noopener" href="https://bugs.webkit.org/show_bug.cgi?id=208667">https://bugs.webkit.org/show_bug.cgi?id=208667</a><br>It prevents ALL other browsers on iOS to offer video-conferencing, while Safari can =&gt; it’s a nasty anti-competitive behaviour that will for sure be scrutinized by US House Antitrust Committee &amp; EU Commission, and Apple should not accumulate evidence of evil conduct.</p>
+<p>2.MDN getUserMedia <a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/API/MediaDevices/getUserMedia">https://developer.mozilla.org/zh-CN/docs/Web/API/MediaDevices/getUserMedia</a></p>
+<p>3.ios10+视频播放新策略 <a target="_blank" rel="noopener" href="https://imququ.com/post/new-video-policies-for-ios10.html">https://imququ.com/post/new-video-policies-for-ios10.html</a></p>
+
+    </div>
+
+    
+    
+    
+        
+
+  <div class="followme">
+    <p>Welcome to my other publishing channels</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="https://github.com/ericlee33">
+            <span class="icon">
+              <i class="fa fa-github"></i>
+            </span>
+
+            <span class="label">github</span>
+          </a>
+        </div>
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/images/wechat_channel.jpeg">
+            <span class="icon">
+              <i class="fa fa-wechat"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/h5/" rel="tag"><i class="fa fa-tag"></i> h5</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/03/29/Formily%E6%9C%8D%E5%8A%A1%E7%AB%AF%E6%8E%A7%E5%88%B6%E8%87%AA%E5%AE%9A%E4%B9%89%E6%A0%A1%E9%AA%8Cx-rules%E8%A7%84%E5%88%99%E5%AE%9E%E8%B7%B5/" rel="prev" title="Formily服务端控制自定义校验x-rules规则实践">
+      <i class="fa fa-chevron-left"></i> Formily服务端控制自定义校验x-rules规则实践
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/04/25/%E8%B6%85%E5%A5%BD%E7%94%A8%E7%9A%84React%E8%84%9A%E6%89%8B%E6%9E%B6%EF%BC%8C%E5%BF%AB%E6%9D%A5%E8%AF%95%E8%AF%95%E5%90%A7/" rel="next" title="超好用的React脚手架，快来试试吧">
+      超好用的React脚手架，快来试试吧 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E6%9C%9F%E5%87%86%E5%A4%87%E5%B7%A5%E4%BD%9C"><span class="nav-number">2.</span> <span class="nav-text">前期准备工作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%84%E7%AB%AF%E5%85%BC%E5%AE%B9%E6%80%A7%E7%8E%B0%E7%8A%B6"><span class="nav-number">2.1.</span> <span class="nav-text">各端兼容性现状</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%80%83%E8%99%91%E6%9B%BF%E4%BB%A3%E6%96%B9%E6%A1%88"><span class="nav-number">2.2.</span> <span class="nav-text">考虑替代方案</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%AD%A3%E7%89%87%E5%BC%80%E5%A7%8B"><span class="nav-number">3.</span> <span class="nav-text">正片开始</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%83%BD%E5%8A%9B%E6%A3%80%E6%B5%8B"><span class="nav-number">3.1.</span> <span class="nav-text">能力检测</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9C%A8%E9%A1%B5%E9%9D%A2%E4%B8%8A%E6%94%BE%E7%BD%AE%E4%B8%80%E4%B8%AAvideo%E5%85%83%E7%B4%A0"><span class="nav-number">3.2.</span> <span class="nav-text">在页面上放置一个video元素</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B0%83%E7%94%A8%E5%B0%81%E8%A3%85%E5%A5%BD%E7%9A%84getUserMedia%EF%BC%8C%E8%8E%B7%E5%8F%96%E7%94%A8%E6%88%B7%E5%AA%92%E4%BD%93%E6%B5%81"><span class="nav-number">3.3.</span> <span class="nav-text">调用封装好的getUserMedia，获取用户媒体流</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A2%9E%E5%8A%A0%E8%A3%81%E5%88%87%E6%A1%86%E5%92%8C%E5%A4%96%E9%83%A8%E9%98%B4%E5%BD%B1"><span class="nav-number">3.4.</span> <span class="nav-text">增加裁切框和外部阴影</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%8C%E6%88%90%E5%AE%9E%E6%97%B6%E7%85%A7%E7%89%87%E8%A3%81%E5%88%87%EF%BC%8C%E4%B8%8A%E4%BC%A0%E6%9C%8D%E5%8A%A1%E7%AB%AF%E8%BF%9B%E8%A1%8COCR%E8%AF%86%E5%88%AB"><span class="nav-number">3.5.</span> <span class="nav-text">完成实时照片裁切，上传服务端进行OCR识别</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%93%E8%AF%AD"><span class="nav-number">4.</span> <span class="nav-text">结语</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#References"><span class="nav-number">5.</span> <span class="nav-text">References</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Eric"
+      src="/uploads/avatar.png">
+  <p class="site-author-name" itemprop="name">Eric</p>
+  <div class="site-description" itemprop="description">热爱前端，热爱分享</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ericlee33" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ericlee33" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:ericfly33@gmail.com" title="E-Mail → mailto:ericfly33@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://stackoverflow.com/users/14472362/eric-lee" title="StackOverflow → https:&#x2F;&#x2F;stackoverflow.com&#x2F;users&#x2F;14472362&#x2F;eric-lee" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i></a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://github.com/ericlee33" title="https:&#x2F;&#x2F;github.com&#x2F;ericlee33" rel="noopener" target="_blank">Github</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Eric</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="Symbols count total">26k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="Reading time total">24 mins.</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="Total Visitors">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="Total Views">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/pangu@4/dist/browser/pangu.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'jn3XQU9QNTKtuUNkTbc8vKyh-gzGzoHsz',
+      appKey     : 'Tu6tjPbEt2aHwvRMmftfoiy5',
+      placeholder: "Hey~ Write your comments here",
+      avatar     : 'monsterid',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : true,
+      lang       : 'en' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : true,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>
